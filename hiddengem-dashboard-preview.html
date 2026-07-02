@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HiddenGem — Find tomorrow's large-caps, today</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 34'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%238FBC94'/%3E%3Cstop offset='100%25' stop-color='%231B4332'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='34' height='34' rx='9' fill='url(%23g)'/%3E%3Ccircle cx='17' cy='16' r='4.5' fill='%23E8B94A'/%3E%3C/svg%3E">
+<meta name="description" content="HiddenGem — an AI-powered Indian mutual fund discovery dashboard that flags funds building conviction before the crowd, with a working SIP calculator.">
+<style>
+  :root{
+    --beige-bg:#F5F0E1;
+    --beige-card:#FBF8EF;
+    --beige-line:#E1D6B8;
+    --green-100:#E7EFE4;
+    --green-300:#8FBC94;
+    --green-500:#3F7D57;
+    --green-700:#1B4332;
+    --green-900:#0F2C21;
+    --yellow:#E8B94A;
+    --yellow-soft:#F4D580;
+    --ink:#1B2B22;
+    --ink-soft:#5B6B5F;
+    --red:#B3523F;
+    --radius-lg:20px;
+    --radius-md:14px;
+    --radius-sm:9px;
+    --shadow-card: 0 1px 2px rgba(27,43,34,0.06), 0 8px 24px -12px rgba(27,43,34,0.12);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background-color:var(--beige-bg);
+    background-image:
+      radial-gradient(circle at 85% 0%, rgba(143,188,148,0.16), transparent 32%),
+      radial-gradient(circle at 0% 40%, rgba(232,185,74,0.10), transparent 28%),
+      radial-gradient(rgba(27,67,50,0.07) 1px, transparent 1px);
+    background-size: auto, auto, 22px 22px;
+    background-attachment: fixed;
+    color:var(--ink);
+    font-family:'IBM Plex Sans', system-ui, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .reveal{ opacity:0; transform:translateY(18px); transition:opacity 0.6s ease, transform 0.6s ease; }
+  .reveal.in{ opacity:1; transform:none; }
+  ::selection{ background:var(--yellow-soft); }
+  .num, .mono{ font-family:'IBM Plex Mono', monospace; }
+  h1,h2,h3, .display{ font-family:'Fraunces', serif; color:var(--green-900); margin:0; }
+  a{ color:inherit; }
+  button{ font-family:inherit; }
+
+  /* ---------- Layout shell ---------- */
+  .wrap{ max-width:1180px; margin:0 auto; padding:0 28px; }
+
+  /* ---------- Top nav ---------- */
+  header.nav{
+    position:sticky; top:0; z-index:40;
+    background:rgba(245,240,225,0.92);
+    backdrop-filter: blur(8px);
+    border-bottom:1px solid var(--beige-line);
+  }
+  .nav-inner{ display:flex; align-items:center; justify-content:space-between; padding:16px 28px; max-width:1180px; margin:0 auto; }
+  .brand{ display:flex; align-items:center; gap:10px; }
+  .brand-mark{
+    width:34px; height:34px; border-radius:9px;
+    background: linear-gradient(155deg, var(--green-300), var(--green-700));
+    position:relative; flex:none;
+  }
+  .brand-mark::after{
+    content:""; position:absolute; inset:0; margin:auto; width:9px; height:9px; border-radius:50%;
+    background:var(--yellow); top:8px; left:8px;
+  }
+  .brand-name{ font-family:'Fraunces', serif; font-weight:600; font-size:20px; color:var(--green-900); letter-spacing:-0.01em;}
+  .brand-tag{ font-size:11px; color:var(--ink-soft); letter-spacing:0.06em; text-transform:uppercase; margin-top:-2px;}
+  nav.links{ display:flex; gap:28px; font-size:14.5px; font-weight:500; color:var(--green-700); }
+  nav.links a{ text-decoration:none; padding:6px 0; border-bottom:2px solid transparent; cursor:pointer; }
+  nav.links a.active, nav.links a:hover{ border-bottom-color:var(--yellow); }
+  .nav-cta{
+    background:var(--green-700); color:var(--beige-card); border:none; padding:10px 18px;
+    border-radius:999px; font-weight:600; font-size:13.5px; cursor:pointer;
+    transition:background 0.15s ease, transform 0.1s ease;
+  }
+  .nav-cta:hover{ background:var(--green-900); transform:translateY(-1px); }
+
+  /* ---------- Hero ---------- */
+  .hero{ padding:52px 0 20px; }
+  .hero-grid{ display:grid; grid-template-columns:1.15fr 0.85fr; gap:40px; align-items:center; }
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    font-size:12px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase;
+    color:var(--green-700); background:var(--green-100); padding:6px 12px; border-radius:999px;
+    margin-bottom:18px;
+  }
+  .eyebrow .dot{ width:6px; height:6px; border-radius:50%; background:var(--yellow); }
+  .hero h1{ font-size:44px; line-height:1.1; font-weight:600; letter-spacing:-0.01em;}
+  .hero h1 em{ font-style:normal; color:var(--green-500); }
+  .hero p{ color:var(--ink-soft); font-size:16px; line-height:1.6; margin-top:16px; }
+  .hero-visual{
+    background:var(--green-900); border-radius:22px; padding:22px; position:relative; overflow:hidden;
+    box-shadow:0 24px 50px -20px rgba(15,44,33,0.5);
+  }
+  .hero-visual::before{
+    content:""; position:absolute; inset:0;
+    background: radial-gradient(circle at 90% 10%, rgba(232,185,74,0.18), transparent 45%);
+  }
+  .hero-visual-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; position:relative; }
+  .hero-visual-head .t{ color:#CFE0D3; font-size:11.5px; text-transform:uppercase; letter-spacing:0.06em; font-weight:600; }
+  .hero-visual-head .badge{ background:var(--yellow); color:#5A3E0D; font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:999px; }
+  #hero-chart{ width:100%; height:150px; display:block; position:relative; }
+  .hero-visual-foot{ display:flex; justify-content:space-between; margin-top:10px; position:relative; }
+  .hero-visual-foot div{ text-align:left; }
+  .hero-visual-foot .l{ font-size:10px; color:#8FA898; text-transform:uppercase; letter-spacing:0.04em; }
+  .hero-visual-foot .v{ font-family:'Fraunces',serif; font-size:17px; color:var(--beige-card); font-weight:600; margin-top:2px; }
+  .hero-visual-foot .v.y{ color:var(--yellow); }
+
+  /* ---------- Stat cards ---------- */
+  .stat-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-top:36px; }
+  .stat-card{
+    background:var(--beige-card); border:1px solid var(--beige-line); border-radius:var(--radius-md);
+    padding:18px 20px; box-shadow:var(--shadow-card); position:relative; overflow:hidden;
+    transition:transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .stat-card::before{ content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--yellow); }
+  .stat-card:hover{ transform:translateY(-2px); box-shadow:0 14px 30px -14px rgba(27,43,34,0.25); }
+  .stat-card .icon{ width:26px; height:26px; color:var(--green-500); margin-bottom:8px; }
+  .stat-card .label{ font-size:12.5px; color:var(--ink-soft); font-weight:500; }
+  .stat-card .value{ font-family:'Fraunces', serif; font-size:30px; color:var(--green-900); margin-top:6px; font-weight:600;}
+  .stat-card .value .unit{ font-size:15px; color:var(--ink-soft); font-family:'IBM Plex Sans'; font-weight:500; }
+  .stat-card .delta{ font-size:12px; margin-top:6px; font-weight:600; }
+  .stat-card .delta.up{ color:var(--green-500); }
+  @media (max-width:760px){ .hero-grid{ grid-template-columns:1fr; } }
+
+  /* ---------- Section shell ---------- */
+  section{ padding:56px 0; border-top:1px solid var(--beige-line); }
+  .section-head{ display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:28px; gap:24px; flex-wrap:wrap; }
+  .section-head h2{ font-size:28px; font-weight:600; letter-spacing:-0.01em; }
+  .section-head p{ color:var(--ink-soft); font-size:14.5px; max-width:460px; margin-top:6px; line-height:1.55; }
+
+  /* ---------- Radar (signature element) ---------- */
+  .radar-shell{
+    background: var(--green-900);
+    border-radius: var(--radius-lg);
+    padding:32px;
+    position:relative;
+    overflow:hidden;
+  }
+  .radar-shell::before{
+    content:""; position:absolute; inset:0;
+    background: radial-gradient(circle at 78% 15%, rgba(232,185,74,0.14), transparent 45%),
+                radial-gradient(circle at 10% 90%, rgba(143,188,148,0.14), transparent 40%);
+    pointer-events:none;
+  }
+  .radar-top{ display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px; margin-bottom:8px; }
+  .radar-top h3{ color:var(--beige-card); font-size:20px; font-weight:600; }
+  .radar-legend{ display:flex; gap:18px; flex-wrap:wrap; }
+  .radar-legend .item{ display:flex; align-items:center; gap:7px; font-size:12px; color:#CFE0D3; }
+  .radar-legend .swatch{ width:10px; height:10px; border-radius:50%; }
+  #radar-svg{ width:100%; height:auto; display:block; margin-top:8px; }
+  .axis-label{ fill:#8FA898; font-size:11px; font-family:'IBM Plex Sans'; }
+  .quad-label{ fill:#3E5A48; font-size:11px; font-family:'IBM Plex Sans'; font-weight:500; letter-spacing:0.02em; }
+  .radar-dot{ cursor:pointer; transition: r 0.15s ease; }
+  .radar-dot:hover{ filter:brightness(1.2); }
+  .gem-dot{ animation: pulse 2.6s ease-in-out infinite; }
+  @keyframes pulse{
+    0%,100%{ filter:drop-shadow(0 0 0px rgba(232,185,74,0.0)); }
+    50%{ filter:drop-shadow(0 0 7px rgba(232,185,74,0.85)); }
+  }
+  .radar-tooltip{
+    position:absolute; pointer-events:none; background:var(--beige-card); color:var(--ink);
+    padding:10px 13px; border-radius:10px; font-size:12.5px; line-height:1.5; max-width:220px;
+    box-shadow:0 12px 28px -8px rgba(0,0,0,0.4); opacity:0; transition:opacity 0.12s; z-index:20;
+  }
+  .radar-tooltip b{ color:var(--green-700); display:block; font-size:13px; margin-bottom:2px; }
+
+  /* ---------- Spotlight cards ---------- */
+  .spotlight-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+  .spotlight-card{
+    background:var(--beige-card); border:1px solid var(--beige-line); border-radius:18px;
+    padding:20px; cursor:pointer; position:relative; overflow:hidden;
+    transition:transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  }
+  .spotlight-card:hover{ transform:translateY(-4px); box-shadow:0 20px 40px -18px rgba(27,43,34,0.28); border-color:var(--green-300); }
+  .spotlight-card::after{
+    content:"HIDDEN GEM"; position:absolute; top:14px; right:-30px; background:var(--yellow); color:#5A3E0D;
+    font-size:9.5px; font-weight:700; letter-spacing:0.05em; padding:4px 34px; transform:rotate(38deg);
+  }
+  .spotlight-rank{ font-family:'Fraunces',serif; font-size:13px; color:var(--ink-soft); margin-bottom:8px; }
+  .spotlight-name{ font-family:'Fraunces',serif; font-size:19px; font-weight:600; color:var(--green-900); line-height:1.25; max-width:200px; }
+  .spotlight-cat{ font-size:12px; color:var(--ink-soft); margin-top:5px; }
+  .spotlight-score{ display:flex; align-items:baseline; gap:6px; margin-top:14px; }
+  .spotlight-score b{ font-family:'Fraunces',serif; font-size:28px; color:var(--green-700); }
+  .spotlight-score span{ font-size:11.5px; color:var(--ink-soft); }
+  .spotlight-why{ font-size:12px; color:var(--ink-soft); margin-top:10px; line-height:1.5; border-top:1px dashed var(--beige-line); padding-top:10px; }
+  .spotlight-cta{ margin-top:12px; font-size:12px; font-weight:600; color:var(--green-700); display:flex; align-items:center; gap:5px; }
+  @media (max-width:860px){ .spotlight-grid{ grid-template-columns:1fr; } }
+
+  .rank-badge{
+    display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; border-radius:50%;
+    font-size:10.5px; font-weight:700; margin-right:6px; font-family:'IBM Plex Mono';
+  }
+  .rank-badge.r1{ background:#F0D27A; color:#5A3E0D; }
+  .rank-badge.r2{ background:#DCE3D9; color:#3E5A48; }
+  .rank-badge.r3{ background:#E3C09E; color:#6B4423; }
+
+  /* ---------- Explorer table ---------- */
+  .filter-bar{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px; }
+  .filter-bar select, .filter-bar input{
+    font-family:inherit; font-size:13.5px; padding:9px 14px; border-radius:999px;
+    border:1px solid var(--beige-line); background:var(--beige-card); color:var(--ink);
+  }
+  .filter-bar input{ flex:1; min-width:200px; }
+  .fund-table{ width:100%; border-collapse:separate; border-spacing:0 10px; }
+  .fund-table thead th{
+    text-align:left; font-size:11.5px; text-transform:uppercase; letter-spacing:0.06em;
+    color:var(--ink-soft); font-weight:600; padding:0 16px 6px; cursor:pointer; user-select:none;
+    white-space:nowrap;
+  }
+  .fund-table thead th:hover{ color:var(--green-700); }
+  .fund-table thead th .sort-arrow{ font-size:9px; margin-left:3px; opacity:0.5; }
+  .fund-table thead th.sorted .sort-arrow{ opacity:1; color:var(--yellow); }
+  .fund-table tbody tr{
+    background:var(--beige-card); cursor:pointer; transition:transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .fund-table tbody tr:hover{ transform:translateY(-1px); box-shadow:var(--shadow-card); }
+  .fund-table td{ padding:14px 16px; font-size:13.8px; border-top:1px solid var(--beige-line); border-bottom:1px solid var(--beige-line); }
+  .fund-table td:first-child{ border-left:1px solid var(--beige-line); border-radius:12px 0 0 12px; }
+  .fund-table td:last-child{ border-right:1px solid var(--beige-line); border-radius:0 12px 12px 0; }
+  .fund-name{ font-weight:600; color:var(--green-900); }
+  .fund-cat{ font-size:11.5px; color:var(--ink-soft); margin-top:2px; }
+  .tag{ display:inline-block; font-size:10.5px; font-weight:600; padding:3px 9px; border-radius:999px; letter-spacing:0.02em; }
+  .tag.gem{ background:var(--yellow-soft); color:#6B4A0E; }
+  .tag.risk-Moderate{ background:var(--green-100); color:var(--green-700); }
+  .tag.risk-High{ background:#F5E3D0; color:#8A5A20; }
+  .tag.risk-VeryHigh{ background:#F3DCD6; color:var(--red); }
+  .score-bar-track{ width:90px; height:6px; background:var(--beige-line); border-radius:99px; overflow:hidden; }
+  .score-bar-fill{ height:100%; background:linear-gradient(90deg, var(--green-300), var(--green-700)); }
+  .cagr-pos{ color:var(--green-500); font-weight:600; }
+  .cagr-neg{ color:var(--red); font-weight:600; }
+  .row-cta{
+    font-size:11.5px; font-weight:600; color:var(--green-700); background:var(--green-100);
+    padding:6px 12px; border-radius:999px; border:none; cursor:pointer; white-space:nowrap;
+  }
+  .row-cta:hover{ background:var(--yellow-soft); color:#6B4A0E; }
+
+  /* ---------- Detail / picker panel ---------- */
+  .overlay{
+    position:fixed; inset:0; background:rgba(15,44,33,0.45); z-index:60;
+    opacity:0; pointer-events:none; transition:opacity 0.2s ease;
+  }
+  .overlay.open{ opacity:1; pointer-events:auto; }
+  .panel{
+    position:fixed; top:0; right:0; height:100%; width:min(480px, 94vw);
+    background:var(--beige-bg); z-index:61; box-shadow:-20px 0 50px rgba(0,0,0,0.25);
+    transform:translateX(100%); transition:transform 0.28s cubic-bezier(.2,.8,.2,1);
+    overflow-y:auto;
+  }
+  .panel.open{ transform:translateX(0); }
+  .panel-inner{ padding:28px; }
+  .panel-close{
+    width:32px; height:32px; border-radius:50%; border:1px solid var(--beige-line);
+    background:var(--beige-card); cursor:pointer; font-size:15px; color:var(--ink-soft);
+    display:flex; align-items:center; justify-content:center; flex:none;
+  }
+  .panel-close:hover{ background:var(--yellow-soft); }
+  .panel-head{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;}
+  .panel h3{ font-size:22px; font-weight:600; line-height:1.25; max-width:340px; }
+  .panel .fund-cat{ font-size:12.5px; margin-top:6px;}
+  .panel-score{
+    margin-top:20px; background:var(--green-900); border-radius:16px; padding:20px; color:var(--beige-card);
+  }
+  .panel-score .big{ font-family:'Fraunces',serif; font-size:38px; font-weight:600; color:var(--yellow); }
+  .panel-score .big span{ font-size:16px; color:#9FB8A8; font-family:'IBM Plex Sans'; }
+  .panel-score .tier{ font-size:12.5px; color:#CFE0D3; margin-top:2px; }
+  .subscore{ margin-top:14px; }
+  .subscore-row{ display:flex; align-items:center; gap:10px; font-size:12px; margin-top:8px; color:#CFE0D3;}
+  .subscore-row .name{ width:110px; flex:none; }
+  .subscore-track{ flex:1; height:5px; background:rgba(255,255,255,0.12); border-radius:99px; overflow:hidden; }
+  .subscore-fill{ height:100%; background:var(--yellow); border-radius:99px; }
+  .explain-box{
+    margin-top:20px; background:var(--green-100); border-left:3px solid var(--green-500);
+    padding:14px 16px; border-radius:0 10px 10px 0; font-size:13.5px; line-height:1.6; color:var(--green-900);
+  }
+  .how-row{ margin-bottom:14px; }
+  .how-name{ font-weight:600; font-size:13.5px; color:var(--green-900); display:flex; justify-content:space-between; }
+  .how-name span{ color:#8A5A20; font-family:'IBM Plex Mono'; font-weight:600; font-size:12.5px; }
+  .how-desc{ font-size:12.5px; color:var(--ink-soft); margin-top:3px; line-height:1.55; }
+  .worked-example{
+    background:var(--green-900); border-radius:14px; padding:16px 18px; color:var(--beige-card); margin-top:6px;
+  }
+  .we-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px; }
+  .we-name{ font-weight:600; font-size:14px; max-width:250px; }
+  .we-score{ font-family:'Fraunces',serif; font-size:22px; color:var(--yellow); font-weight:600; }
+  .we-score span{ font-size:12px; color:#9FB8A8; font-family:'IBM Plex Sans'; }
+  .we-row{ display:flex; flex-direction:column; gap:1px; font-size:12px; color:#CFE0D3; padding:8px 0; border-bottom:1px dashed rgba(255,255,255,0.12); }
+  .we-row b{ color:var(--beige-card); font-family:'IBM Plex Mono'; font-size:13px; }
+  .we-row small{ color:#8FA898; font-size:10.5px; }
+  .why-verdict{
+    margin-top:10px; background:var(--green-100); border-left:3px solid var(--green-500);
+    padding:12px 14px; border-radius:0 10px 10px 0; font-size:13px; line-height:1.55; color:var(--green-900);
+  }
+  .why-list{ margin-top:12px; display:flex; flex-direction:column; gap:10px; }
+  .why-item{
+    display:flex; gap:11px; background:var(--beige-card); border:1px solid var(--beige-line);
+    border-radius:12px; padding:11px 13px;
+  }
+  .why-item.met{ border-color:var(--green-300); background:linear-gradient(90deg, var(--green-100), var(--beige-card) 40%); }
+  .why-icon{
+    flex:none; width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:700; background:var(--beige-line); color:var(--ink-soft);
+  }
+  .why-item.met .why-icon{ background:var(--green-500); color:#fff; }
+  .why-label{ font-size:12.5px; font-weight:600; color:var(--green-900); display:flex; justify-content:space-between; }
+  .why-label span{ font-family:'IBM Plex Mono'; font-weight:600; font-size:11.5px; color:var(--ink-soft); }
+  .why-text{ font-size:12px; color:var(--ink-soft); margin-top:3px; line-height:1.5; }
+  .chart-box{ margin-top:24px; }
+  .chart-box h4{ font-size:12.5px; text-transform:uppercase; letter-spacing:0.05em; color:var(--ink-soft); font-weight:600; margin-bottom:10px;}
+  #nav-chart{ width:100%; height:130px; display:block; }
+
+  /* ---------- SIP calculator (Groww-style) ---------- */
+  .sip-box{
+    margin-top:24px; background:var(--beige-card); border:1px solid var(--beige-line);
+    border-radius:16px; padding:20px;
+  }
+  .sip-box h4{ font-size:15px; font-weight:600; color:var(--green-900); margin-bottom:2px; font-family:'Fraunces',serif;}
+  .sip-box .sub{ font-size:12px; color:var(--ink-soft); margin-bottom:16px; }
+  .sip-field{ margin-top:16px; }
+  .sip-field-head{ display:flex; justify-content:space-between; align-items:baseline; font-size:12.5px; color:var(--ink-soft); font-weight:500; margin-bottom:8px; }
+  .sip-field-head b{ font-family:'IBM Plex Mono'; color:var(--green-900); font-size:14px; font-weight:600; }
+  input[type="range"]{
+    -webkit-appearance:none; width:100%; height:5px; border-radius:99px;
+    background:var(--beige-line); outline:none; cursor:pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:18px; height:18px; border-radius:50%;
+    background:var(--green-700); border:3px solid var(--yellow); cursor:pointer;
+  }
+  input[type="range"]::-moz-range-thumb{
+    width:18px; height:18px; border-radius:50%; background:var(--green-700); border:3px solid var(--yellow); cursor:pointer;
+  }
+  .sip-results{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:20px; }
+  .sip-result{ background:var(--beige-bg); border:1px solid var(--beige-line); border-radius:12px; padding:12px 10px; text-align:center; }
+  .sip-result .l{ font-size:10.5px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.04em; font-weight:600; }
+  .sip-result .v{ font-family:'Fraunces',serif; font-size:16px; color:var(--green-900); margin-top:4px; font-weight:600; }
+  .sip-result.hi .v{ color:#8A5A20; }
+  #sip-chart{ width:100%; height:170px; display:block; margin-top:18px; }
+  .sip-legend{ display:flex; gap:16px; margin-top:8px; font-size:11.5px; color:var(--ink-soft); }
+  .sip-legend .item{ display:flex; align-items:center; gap:6px; }
+  .sip-legend .sw{ width:10px; height:10px; border-radius:3px; }
+
+  .compare-box{ margin-top:22px; }
+  #compare-chart{ width:100%; height:90px; display:block; margin-top:10px; }
+
+  /* ---------- Fund picker ---------- */
+  .picker-search{
+    width:100%; padding:12px 16px; border-radius:12px; border:1px solid var(--beige-line);
+    background:var(--beige-card); font-size:14px; font-family:inherit; margin-top:16px;
+  }
+  .picker-list{ margin-top:16px; display:flex; flex-direction:column; gap:8px; }
+  .picker-card{
+    display:flex; justify-content:space-between; align-items:center; gap:10px;
+    background:var(--beige-card); border:1px solid var(--beige-line); border-radius:12px;
+    padding:13px 15px; cursor:pointer; transition:transform 0.12s ease;
+  }
+  .picker-card:hover{ transform:translateX(-2px); border-color:var(--green-300); }
+  .picker-card .pn{ font-weight:600; font-size:13.5px; color:var(--green-900); }
+  .picker-card .pc{ font-size:11.5px; color:var(--ink-soft); margin-top:2px; }
+  .picker-card .ps{ font-family:'IBM Plex Mono'; font-size:15px; color:var(--green-700); font-weight:600; text-align:right; }
+  .picker-card .ps small{ display:block; font-size:9.5px; color:var(--ink-soft); font-weight:400; }
+
+  /* ---------- Footer ---------- */
+  footer{ padding:40px 0 60px; color:var(--ink-soft); font-size:12.5px; line-height:1.7; }
+  footer a{ color:var(--green-700); font-weight:600; text-decoration:none; }
+  footer .stack{ display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
+  footer .stack span{ background:var(--beige-card); border:1px solid var(--beige-line); padding:5px 11px; border-radius:999px; font-size:11.5px; }
+
+  @media (max-width:860px){
+    .stat-row{ grid-template-columns:repeat(2,1fr); }
+    .hero h1{ font-size:32px; }
+    nav.links{ display:none; }
+    .sip-results{ grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="nav-inner">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div>
+        <div class="brand-name">HiddenGem</div>
+        <div class="brand-tag">Discovery-first investing · India</div>
+      </div>
+    </div>
+    <nav class="links">
+      <a class="active" id="nav-explore" role="button" tabindex="0">Explore</a>
+      <a id="nav-gems" role="button" tabindex="0">Hidden Gems</a>
+      <a id="nav-how" role="button" tabindex="0">How it works</a>
+    </nav>
+    <button class="nav-cta" id="start-sip-btn">Start SIP</button>
+  </div>
+</header>
+
+<div class="wrap" id="top">
+
+  <section class="hero" style="border-top:none;">
+    <div class="hero-grid">
+      <div>
+        <div class="eyebrow"><span class="dot"></span> AI-powered fund discovery, built for Indian mutual funds</div>
+        <h1>Everyone shows you today's large-caps. <em>We show you tomorrow's.</em></h1>
+        <p>Most fund apps rank by trailing returns, so they mostly point you to funds the whole market has already found. HiddenGem reads investor holding behaviour, AUM flow, and financial news from Mint, MoneyControl and ET Markets to flag SEBI-categorised funds building genuine conviction before the crowd arrives.</p>
+      </div>
+      <div class="hero-visual">
+        <div class="hero-visual-head">
+          <div class="t">Sample · Quiet Compounder</div>
+          <div class="badge">+CONVICTION</div>
+        </div>
+        <svg id="hero-chart" viewBox="0 0 400 150"></svg>
+        <div class="hero-visual-foot">
+          <div><div class="l">Discovered by market</div><div class="v">Not yet</div></div>
+          <div><div class="l">Investor conviction</div><div class="v y">High</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-row reveal" id="stat-row"></div>
+  </section>
+
+  <section id="spotlight-section">
+    <div class="section-head">
+      <div>
+        <h2>Today's Spotlight Gems</h2>
+        <p>The three highest-scoring Hidden Gems right now, with the exact reason each one made the list. Click any card for the full breakdown and SIP calculator.</p>
+      </div>
+    </div>
+    <div class="spotlight-grid reveal" id="spotlight-grid"></div>
+  </section>
+
+  <section id="radar-section">
+    <div class="section-head">
+      <div>
+        <h2>The Hidden Gems Radar</h2>
+        <p>Every dot is a fund. Right means investors are staying invested longer than their category peers — real conviction, not hype. Up means money is quietly flowing in faster than the category average. The glowing dots are what our model flags as Hidden Gems.</p>
+      </div>
+    </div>
+    <div class="radar-shell reveal">
+      <div class="radar-top">
+        <h3>Holding Conviction × AUM Momentum</h3>
+        <div class="radar-legend">
+          <div class="item"><span class="swatch" style="background:var(--yellow);box-shadow:0 0 6px var(--yellow);"></span>Hidden Gem</div>
+          <div class="item"><span class="swatch" style="background:var(--green-300);"></span>Large Cap</div>
+          <div class="item"><span class="swatch" style="background:#7FA8D9;"></span>Mid / Small Cap</div>
+          <div class="item"><span class="swatch" style="background:#CFE0D3;"></span>Other</div>
+        </div>
+      </div>
+      <svg id="radar-svg" viewBox="0 0 1120 480"></svg>
+      <div class="radar-tooltip" id="radar-tooltip"></div>
+    </div>
+  </section>
+
+  <section id="explorer-section">
+    <div class="section-head">
+      <div>
+        <h2>Fund Explorer</h2>
+        <p>Every SEBI-categorised fund we track, ranked by Hidden Gem Score. Click any row to see the full breakdown, run the SIP calculator, and see why it did — or didn't — make the cut.</p>
+      </div>
+    </div>
+    <div class="filter-bar">
+      <input type="text" id="search-input" placeholder="Search fund or AMC name...">
+      <select id="category-filter"><option value="">All categories</option></select>
+      <select id="gem-filter">
+        <option value="">All funds</option>
+        <option value="gems">Hidden Gems only</option>
+      </select>
+    </div>
+    <table class="fund-table reveal">
+      <thead>
+        <tr>
+          <th data-key="fund_name">Fund <span class="sort-arrow">↕</span></th>
+          <th data-key="current_aum_cr">AUM <span class="sort-arrow">↕</span></th>
+          <th data-key="cagr">3Y CAGR <span class="sort-arrow">↕</span></th>
+          <th data-key="avg_holding_period_months">Avg. Holding <span class="sort-arrow">↕</span></th>
+          <th data-key="hidden_gem_score">Hidden Gem Score <span class="sort-arrow">↕</span></th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="fund-tbody"></tbody>
+    </table>
+  </section>
+
+  <footer>
+    <div class="footer-top">
+      <div class="brand" style="margin-bottom:4px;">
+        <div class="brand-mark" style="width:26px;height:26px;"></div>
+        <div class="brand-name" style="font-size:16px;">HiddenGem</div>
+      </div>
+      <div>Built by <b style="color:var(--green-900);">Shinoy Babru</b> as an end-to-end data analytics &amp; ML portfolio project.</div>
+    </div>
+    <div style="margin-top:10px;">
+      Source code: <!-- replace this with your actual repo URL once pushed --><span style="font-weight:600;">add your GitHub repo link here</span>.
+      All fund names, AMCs, NAVs and news items are <b>synthetic sample data</b> generated to demonstrate the pipeline; nothing here is real investment data or advice, and the "Start SIP" flow is a working demo, not a real transaction.
+    </div>
+    <div class="stack">
+      <span>Python</span><span>SQL (star schema)</span><span>scikit-learn</span><span>Power BI</span><span>Vanilla JS / SVG</span>
+    </div>
+  </footer>
+
+</div>
+
+<div class="overlay" id="overlay"></div>
+<div class="panel" id="panel">
+  <div class="panel-inner" id="panel-content"></div>
+</div>
+
+<script id="fund-data" type="application/json">[{"fund_id": 27, "fund_name": "Deccan Cornerstone Fund", "amc_name": "Deccan Investments", "fund_manager": "Kavita Nair", "category_name": "Large Cap", "risk_grade": "Moderate", "current_aum_cr": 19425.9, "aum_growth_rate": 0.86, "avg_holding_period_months": 52.4, "holding_period_percentile": 99.0, "cagr": 0.25, "volatility": 0.25, "sharpe_like": 0.98, "holding_strength_score": 100.0, "aum_growth_score": 77.14, "performance_score": 46.9, "news_momentum_score": 63.29, "hidden_gem_score": 74.8, "hidden_gem_flag": true, "predicted_tier": "Emerging Large-Cap", "explanation": "This fund is still under the radar because investors hold this fund 52 months on average (99th percentile in its category) \u2014 a sign of real conviction, not hype; and AUM has grown 86% YoY, outpacing most Large Cap peers.", "expense_ratio_pct": "1.36"}, {"fund_id": 13, "fund_name": "Konkan Frontier Equity Fund", "amc_name": "Konkan Asset Management", "fund_manager": "Nisha Kapoor", "category_name": "Small Cap", "risk_grade": "Very High", "current_aum_cr": 24808.7, "aum_growth_rate": 1.29, "avg_holding_period_months": 40.2, "holding_period_percentile": 69.8, "cagr": 0.15, "volatility": 0.21, "sharpe_like": 0.74, "holding_strength_score": 67.34, "aum_growth_score": 100.0, "performance_score": 39.14, "news_momentum_score": 100.0, "hidden_gem_score": 74.3, "hidden_gem_flag": false, "predicted_tier": "Established / Not Flagged", "explanation": "This fund is still under the radar because investors hold this fund 40 months on average (70th percentile in its category) \u2014 a sign of real conviction, not hype; and AUM has grown 129% YoY, outpacing most Small Cap peers; and analyst and media mentions are accelerating from a low base \u2014 still early.", "expense_ratio_pct": "1.23"}, {"fund_id": 1, "fund_name": "Konkan Rising Bharat Fund", "amc_name": "Konkan Asset Management", "fund_manager": "Rohan Iyer", "category_name": "Large Cap", "risk_grade": "Moderate", "current_aum_cr": 6408.3, "aum_growth_rate": 1.18, "avg_holding_period_months": 43.1, "holding_period_percentile": 81.2, "cagr": 0.14, "volatility": 0.22, "sharpe_like": 0.64, "holding_strength_score": 80.09, "aum_growth_score": 100.0, "performance_score": 35.88, "news_momentum_score": 76.42, "hidden_gem_score": 74.1, "hidden_gem_flag": true, "predicted_tier": "Emerging Large-Cap", "explanation": "This fund is still under the radar because investors hold this fund 43 months on average (81th percentile in its category) \u2014 a sign of real conviction, not hype; and AUM has grown 118% YoY, outpacing most Large Cap peers; and analyst and media mentions are accelerating from a low base \u2014 still early.", "expense_ratio_pct": "0.85"}, {"fund_id": 15, "fund_name": "Ganga Horizon Equity Fund", "amc_name": "Ganga Mutual Fund", "fund_manager": "Priya Pillai", "category_name": "Flexi Cap", "risk_grade": "High", "current_aum_cr": 3328.0, "aum_growth_rate": 1.12, "avg_holding_period_months": 35.1, "holding_period_percentile": 59.2, "cagr": 0.37, "volatility": 0.14, "sharpe_like": 2.65, "holding_strength_score": 55.48, "aum_growth_score": 100.0, "performance_score": 100.0, "news_momentum_score": 5.22, "hidden_gem_score": 71.5, "hidden_gem_flag": true, "predicted_tier": "Emerging Large-Cap Flexi", "explanation": "This fund is still under the radar because AUM has grown 112% YoY, outpacing most Flexi Cap peers; and delivering a 37.3% CAGR at controlled volatility (risk-adjusted, not a lucky spike).", "expense_ratio_pct": "1.87"}, {"fund_id": 22, "fund_name": "Nilgiri Shikhar Growth Fund", "amc_name": "Nilgiri Growth AMC", "fund_manager": "Rohan Kulkarni", "category_name": "Sectoral - Banking", "risk_grade": "High", "current_aum_cr": 14241.1, "aum_growth_rate": 0.66, "avg_holding_period_months": 45.5, "holding_period_percentile": 83.6, "cagr": 0.02, "volatility": 0.23, "sharpe_like": 0.08, "holding_strength_score": 82.77, "aum_growth_score": 100.0, "performance_score": 18.3, "news_momentum_score": 0.0, "hidden_gem_score": 59.1, "hidden_gem_flag": false, "predicted_tier": "Established / Not Flagged", "explanation": "This fund is still under the radar because investors hold this fund 46 months on average (84th percentile in its category) \u2014 a sign of real conviction, not hype; and AUM has grown 66% YoY, outpacing most Sectoral - Banking peers.", "expense_ratio_pct": "1.56"}, {"fund_id": 11, "fund_name": "Deccan Alpha Generator Fund", "amc_name": "Deccan Investments", "fund_manager": "Meera Deshmukh", "category_name": "Mid Cap", "risk_grade": "High", "current_aum_cr": 22918.7, "aum_growth_rate": 0.87, "avg_holding_period_months": 33.9, "holding_period_percentile": 70.0, "cagr": 0.07, "volatility": 0.21, "sharpe_like": 0.34, "holding_strength_score": 67.56, "aum_growth_score": 100.0, "performance_score": 26.44, "news_momentum_score": 5.22, "hidden_gem_score": 57.0, "hidden_gem_flag": false, "predicted_tier": "Established / Not Flagged", "explanation": "This fund is still under the radar because investors hold this fund 34 months on average (70th percentile in its category) \u2014 a sign of real conviction, not hype; and AUM has grown 87% YoY, outpacing most Mid Cap peers.", "expense_ratio_pct": "1.84"}, {"fund_id": 30, "fund_name": "Malabar Beacon Equity Fund", "amc_name": "Malabar Capital", "fund_manager": "Suresh Kapoor", "category_name": "Flexi Cap", "risk_grade": "High", "current_aum_cr": 35821.2, "aum_growth_rate": 0.57, "avg_holding_period_months": 34.6, "holding_period_percentile": 61.4, "cagr": 0.2, "volatility": 0.15, "sharpe_like": 1.34, "holding_strength_score": 57.94, "aum_growth_score": 80.95, "performance_score": 58.15, "news_momentum_score": 5.22, "hidden_gem_score": 56.5, "hidden_gem_flag": false, "predicted_tier": "Established / Not Flagged", "explanation": "This fund is still under the radar because AUM has grown 57% YoY, outpacing most Flexi Cap peers.", "expense_ratio_pct": "0.95"}, {"fund_id": 14, "fund_name": "Nilgiri Swaraj Growth Fund", "amc_name": "Nilgiri Growth AMC", "fund_manager": "Ananya Agarwal", "category_name": "Sectoral - Banking", "risk_grade": "High", "current_aum_cr": 11268.6, "aum_growth_rate": 0.57, "avg_holding_period_months": 43.3, "holding_period_percentile": 81.6, "cagr": 0.14, "volatility": 0.22, "sharpe_like": 0.63, "holding_strength_score": 80.54, "aum_growth_score": 71.43, "performance_score": 35.63, "news_momentum_score": 5.22, "hidden_gem_score": 55.5, "hidden_gem_flag": false, "predicted_tier": "Established / Not Flagged", "explanation": "This fund is still under the radar because investors hold this fund 43 months on average (82th percentile in its category) \u2014 a sign of real conviction, not hype; and AUM has grown 57% YoY, outpacing most Sectoral - Banking peers.", "expense_ratio_pct": "1.19"}, {"fund_id": 16, "fund_name": "Yamuna Steady Climb Fund", "amc_name": "Yamuna Wealth", "fund_manager": "Rohan Reddy", "category_name": "ELSS (Tax Saver)", "risk_grade": "High", "current_aum_cr": 19482.6, "aum_growth_rate": 0.16, "avg_holding_period_months": 22.0, "holding_period_percentile": 43.6, "cagr": 0.19, "volatility": 0.19, "sharpe_like": 1.01, "holding_strength_score": 38.03, "aum_growth_score": 100.0, "performance_score": 47.91, "news_momentum_score": 5.22, "hidden_gem_score": 52.9, "hidden_gem_flag": false, "predicted_tier": "Established / Not Flagged", "explanation": "This fund is still under the radar because AUM has grown 16% YoY, outpacing most ELSS (Tax Saver) peers.", "expense_ratio_pct": "0.61"}, {"fund_id": 25, "fund_name": "Sahyadri Nova Growth Fund", "amc_name": "Sahyadri Mutual Fund", "fund_manager": "Ananya Menon", "category_name": "Small Cap", "risk_grade": "Very High", "current_aum_cr": 32334.9, "aum_growth_rate": 1.09, "avg_holding_period_months": 36.3, "holding_period_percentile": 67.1, "cagr": 0.17, "volatility": 0.24, "sharpe_like": 0.69, "holding_strength_score": 64.32, "aum_growth_score": 61.9, "performance_score": 37.76, "news_momentum_score": 31.38, "hidden_gem_score": 52.1, "hidden_gem_flag": false, "predicted_tier": "Established / Not Flagged", "explanation": "This fund is still under the radar because solid fundamentals but no single standout signal yet.", "expense_ratio_pct": "1.45"}, {"fund_id": 18, "fund_name": "Sahyadri Vantage Point Fund", "amc_name": "Sahyadri Mutual Fund", "fund_manager": "Sneha Nair", "category_name": "Mid Cap", "risk_grade": "High", "current_aum_cr": 37645.8, "aum_growth_rate": 0.41, "avg_holding_period_months": 24.7, "holding_period_percentile": 40.3, "cagr": 0.24, "volatility": 0.22, "sharpe_like": 1.06, "holding_strength_score": 34.34, "aum_growth_score": 85.71, "performance_score": 49.49, "news_momentum_score": 5.22, "hidden_gem_score": 48.1, "hidden_gem_flag": false, "predicted_tier": "Established / Not Flagged", "explanation": "This fund is still under the radar because AUM has grown 41% YoY, outpacing most Mid Cap peers.", "expense_ratio_pct": "2.1"}, {"fund_id": 23, "fund_name": "Brahmaputra Evergreen Equity Fund", "amc_name": "Brahmaputra Capital", "fund_manager": "Sneha Joshi", "category_name": "Mid Cap", "risk_grade": "High", "current_aum_cr": 12044.2, "aum_growth_rate": 0.38, "avg_holding_period_months": 25.3, "holding_period_percentile": 44.8, "cagr": 0.12, "volatility": 0.13, "sharpe_like": 0.88, "holding_strength_score": 39.37, "aum_growth_score": 71.43, "performance_score": 43.57, "news_momentum_score": 5.22, "hidden_gem_score": 44.3, "hidden_gem_flag": false, "predicted_tier": "Established / Not Flagged", "explanation": "This fund is still under the radar because AUM has grown 38% YoY, outpacing most Mid Cap peers.", "expense_ratio_pct": "0.8"}, {"fund_id": 8, "fund_name": "Deccan Wealth Builder Fund", "amc_name": "Deccan Investments", "fund_manager": "Karthik Kulkarni", "category_name": "Flexi Cap", "risk_grade": "High", "current_aum_cr": 33653.6, "aum_growth_rate": 0.22, "avg_holding_period_months": 14.0, "holding_period_percentile": 33.8, "cagr": 0.2, "volatility": 0.15, "sharpe_like": 1.37, "holding_strength_score": 27.07, "aum_growth_score": 61.9, "performance_score": 59.08, "news_momentum_score": 5.22, "hidden_gem_score": 41.5, "hidden_gem_flag": false, "predicted_tier": "Established / Not Flagged", "explanation": "This fund is still under the radar because solid fundamentals but no single standout signal yet.", "expense_ratio_pct": "1.34"}, {"fund_id": 24, "fund_name": "Sahyadri Quantum Leap Fund", "amc_name": "Sahyadri Mutual Fund", "fund_manager": "Ananya Iyer", "category_name": "Sectoral - Technology", "risk_grade": "Very High", "current_aum_cr": 30103.7, "aum_growth_rate": 0.41, "avg_holding_period_months": 8.3, "holding_period_percentile": 21.4, "cagr": 0.03, "volatility": 0.15, "sharpe_like": 0.22, "holding_strength_score": 13.2, "aum_growth_score": 100.0, "performance_score": 22.69, "news_momentum_score": 5.22, "hidden_gem_score": 38.7, "hidden_gem_flag": false, "predicted_tier": "Established / Not Flagged", "explanation": "This fund is still under the radar because AUM has grown 41% YoY, outpacing most Sectoral - Technology peers.", "expense_ratio_pct": "1.32"}, {"fund_id": 4, "fund_name": "Yamuna Value Discovery Fund", "amc_name": "Yamuna Wealth", "fund_manager": "Aditya Nair", "category_name": "Mid Cap", "risk_grade": "High", "current_aum_cr": 37348.8, "aum_growth_rate": 0.37, "avg_holding_period_months": 18.7, "holding_period_percentile": 37.9, "cagr": 0.15, "volatility": 0.18, "sharpe_like": 0.81, "holding_strength_score": 31.66, "aum_growth_score": 57.14, "performance_score": 41.49, "news_momentum_score": 5.22, "hidden_gem_score": 37.3, "hidden_gem_flag": false, "predicted_tier": "Established / Not Flagged", "explanation": "This fund is still under the radar because solid fundamentals but no single standout signal yet.", "expense_ratio_pct": "1.36"}, {"fund_id": 17, "fund_name": "Coromandel Next Gen Equity Fund", "amc_name": "Coromandel Mutual Fund", "fund_manager": "Suresh Joshi", "category_name": "Mid Cap", "risk_grade": "High", "current_aum_cr": 20270.3, "aum_growth_rate": 0.05, "avg_holding_period_months": 11.5, "holding_period_percentile": 28.1, "cagr": 0.27, "volatility": 0.16, "sharpe_like": 1.68, "holding_strength_score": 20.69, "aum_growth_score": 28.57, "performance_score": 68.99, "news_momentum_score": 5.22, "hidden_gem_score": 32.7, "hidden_gem_flag": false, "predicted_tier": "Established / Not Flagged", "explanation": "This fund is still under the radar because delivering a 27.4% CAGR at controlled volatility (risk-adjusted, not a lucky spike).", "expense_ratio_pct": "0.76"}, {"fund_id": 6, "fund_name": "Deccan Navratna Fund", "amc_name": "Deccan Investments", "fund_manager": "Priya Joshi", "category_name": "Flexi Cap", "risk_grade": "High", "current_aum_cr": 44530.1, "aum_growth_rate": 0.21, "avg_holding_period_months": 21.1, "holding_period_percentile": 44.5, "cagr": 0.03, "volatility": 0.14, "sharpe_like": 0.21, "holding_strength_score": 39.04, "aum_growth_score": 42.86, "performance_score": 22.21, "news_momentum_score": 5.22, "hidden_gem_score": 30.8, "hidden_gem_flag": false, "predicted_tier": "Established / Not Flagged", "explanation": "This fund is still under the radar because solid fundamentals but no single standout signal yet.", "expense_ratio_pct": "1.08"}, {"fund_id": 5, "fund_name": "Vindhya Focused Equity Fund", "amc_name": "Vindhya Asset Mgmt", "fund_manager": "Meera Menon", "category_name": "Mid Cap", "risk_grade": "High", "current_aum_cr": 20485.5, "aum_growth_rate": -0.01, "avg_holding_period_months": 13.8, "holding_period_percentile": 28.3, "cagr": -0.0, "volatility": 0.19, "sharpe_like": -0.02, "holding_strength_score": 20.92, "aum_growth_score": 14.29, "performance_score": 14.97, "news_momentum_score": 96.88, "hidden_gem_score": 29.0, "hidden_gem_flag": false, "predicted_tier": "Established / Not Flagged", "explanation": "This fund is still under the radar because analyst and media mentions are accelerating from a low base \u2014 still early.", "expense_ratio_pct": "1.08"}, {"fund_id": 19, "fund_name": "Nilgiri Udaan Equity Fund", "amc_name": "Nilgiri Growth AMC", "fund_manager": "Vikram Nair", "category_name": "Large Cap", "risk_grade": "Moderate", "current_aum_cr": 17660.4, "aum_growth_rate": 0.33, "avg_holding_period_months": 12.3, "holding_period_percentile": 25.9, "cagr": 0.09, "volatility": 0.23, "sharpe_like": 0.39, "holding_strength_score": 18.23, "aum_growth_score": 54.29, "performance_score": 28.04, "news_momentum_score": 5.22, "hidden_gem_score": 28.8, "hidden_gem_flag": false, "predicted_tier": "Established / Not Flagged", "explanation": "This fund is still under the radar because solid fundamentals but no single standout signal yet.", "expense_ratio_pct": "0.45"}, {"fund_id": 12, "fund_name": "Yamuna Compounder Fund", "amc_name": "Yamuna Wealth", "fund_manager": "Nisha Kulkarni", "category_name": "Large Cap", "risk_grade": "Moderate", "current_aum_cr": 37450.2, "aum_growth_rate": -0.07, "avg_holding_period_months": 25.3, "holding_period_percentile": 54.0, "cagr": 0.12, "volatility": 0.23, "sharpe_like": 0.51, "holding_strength_score": 49.66, "aum_growth_score": 8.57, "performance_score": 31.82, "news_momentum_score": 12.04, "hidden_gem_score": 28.1, "hidden_gem_flag": false, "predicted_tier": "Established / Not Flagged", "explanation": "This fund is still under the radar because solid fundamentals but no single standout signal yet.", "expense_ratio_pct": "1.9"}, {"fund_id": 10, "fund_name": "Ganga Future Titans Fund", "amc_name": "Ganga Mutual Fund", "fund_manager": "Karthik Pillai", "category_name": "Mid Cap", "risk_grade": "High", "current_aum_cr": 34621.7, "aum_growth_rate": 0.06, "avg_holding_period_months": 9.5, "holding_period_percentile": 9.6, "cagr": 0.33, "volatility": 0.24, "sharpe_like": 1.39, "holding_strength_score": 0.0, "aum_growth_score": 42.86, "performance_score": 59.89, "news_momentum_score": 5.22, "hidden_gem_score": 27.8, "hidden_gem_flag": false, "predicted_tier": "Established / Not Flagged", "explanation": "This fund is still under the radar because solid fundamentals but no single standout signal yet.", "expense_ratio_pct": "1.69"}, {"fund_id": 26, "fund_name": "Nilgiri Sunrise Equity Fund", "amc_name": "Nilgiri Growth AMC", "fund_manager": "Ananya Iyer", "category_name": "Sectoral - Technology", "risk_grade": "Very High", "current_aum_cr": 6017.3, "aum_growth_rate": -0.01, "avg_holding_period_months": 15.7, "holding_period_percentile": 32.4, "cagr": 0.01, "volatility": 0.21, "sharpe_like": 0.06, "holding_strength_score": 25.5, "aum_growth_score": 42.86, "performance_score": 17.67, "news_momentum_score": 5.22, "hidden_gem_score": 25.4, "hidden_gem_flag": false, "predicted_tier": "Established / Not Flagged", "explanation": "This fund is still under the radar because solid fundamentals but no single standout signal yet.", "expense_ratio_pct": "1.0"}, {"fund_id": 21, "fund_name": "Konkan Trailblazer Fund", "amc_name": "Konkan Asset Management", "fund_manager": "Meera Iyer", "category_name": "Small Cap", "risk_grade": "Very High", "current_aum_cr": 38802.6, "aum_growth_rate": 0.42, "avg_holding_period_months": 18.5, "holding_period_percentile": 35.6, "cagr": -0.12, "volatility": 0.25, "sharpe_like": -0.49, "holding_strength_score": 29.08, "aum_growth_score": 23.81, "performance_score": 0.0, "news_momentum_score": 36.64, "hidden_gem_score": 21.5, "hidden_gem_flag": false, "predicted_tier": "Established / Not Flagged", "explanation": "This fund is still under the radar because solid fundamentals but no single standout signal yet.", "expense_ratio_pct": "0.56"}, {"fund_id": 9, "fund_name": "Konkan Prime Growth Fund", "amc_name": "Konkan Asset Management", "fund_manager": "Karthik Joshi", "category_name": "Large Cap", "risk_grade": "Moderate", "current_aum_cr": 35674.8, "aum_growth_rate": -0.07, "avg_holding_period_months": 14.4, "holding_period_percentile": 34.6, "cagr": -0.06, "volatility": 0.25, "sharpe_like": -0.24, "holding_strength_score": 27.96, "aum_growth_score": 31.43, "performance_score": 8.09, "news_momentum_score": 5.22, "hidden_gem_score": 20.6, "hidden_gem_flag": false, "predicted_tier": "Established / Not Flagged", "explanation": "This fund is still under the radar because solid fundamentals but no single standout signal yet.", "expense_ratio_pct": "1.49"}, {"fund_id": 3, "fund_name": "Deccan Growth Pioneer Fund", "amc_name": "Deccan Investments", "fund_manager": "Suresh Rao", "category_name": "ELSS (Tax Saver)", "risk_grade": "High", "current_aum_cr": 43081.0, "aum_growth_rate": -0.05, "avg_holding_period_months": 8.1, "holding_period_percentile": 20.6, "cagr": -0.04, "volatility": 0.21, "sharpe_like": -0.17, "holding_strength_score": 12.3, "aum_growth_score": 42.86, "performance_score": 10.15, "news_momentum_score": 5.22, "hidden_gem_score": 19.3, "hidden_gem_flag": false, "predicted_tier": "Established / Not Flagged", "explanation": "This fund is still under the radar because solid fundamentals but no single standout signal yet.", "expense_ratio_pct": "0.71"}, {"fund_id": 29, "fund_name": "Deccan Sankalp Growth Fund", "amc_name": "Deccan Investments", "fund_manager": "Divya Kulkarni", "category_name": "Sectoral - Banking", "risk_grade": "High", "current_aum_cr": 38903.3, "aum_growth_rate": 0.05, "avg_holding_period_months": 23.3, "holding_period_percentile": 36.9, "cagr": 0.01, "volatility": 0.2, "sharpe_like": 0.04, "holding_strength_score": 30.54, "aum_growth_score": 14.29, "performance_score": 17.04, "news_momentum_score": 5.22, "hidden_gem_score": 18.8, "hidden_gem_flag": false, "predicted_tier": "Established / Not Flagged", "explanation": "This fund is still under the radar because solid fundamentals but no single standout signal yet.", "expense_ratio_pct": "1.77"}, {"fund_id": 20, "fund_name": "Vindhya Ascent Equity Fund", "amc_name": "Vindhya Asset Mgmt", "fund_manager": "Rohan Chatterjee", "category_name": "Flexi Cap", "risk_grade": "High", "current_aum_cr": 2883.9, "aum_growth_rate": -0.07, "avg_holding_period_months": 16.5, "holding_period_percentile": 37.2, "cagr": 0.06, "volatility": 0.19, "sharpe_like": 0.34, "holding_strength_score": 30.87, "aum_growth_score": 4.76, "performance_score": 26.47, "news_momentum_score": 5.22, "hidden_gem_score": 18.6, "hidden_gem_flag": false, "predicted_tier": "Established / Not Flagged", "explanation": "This fund is still under the radar because solid fundamentals but no single standout signal yet.", "expense_ratio_pct": "1.66"}, {"fund_id": 28, "fund_name": "Malabar Milestone Equity Fund", "amc_name": "Malabar Capital", "fund_manager": "Rajesh Rao", "category_name": "Mid Cap", "risk_grade": "High", "current_aum_cr": 18376.0, "aum_growth_rate": -0.01, "avg_holding_period_months": 26.5, "holding_period_percentile": 54.8, "cagr": -0.1, "volatility": 0.23, "sharpe_like": -0.41, "holding_strength_score": 50.56, "aum_growth_score": 0.0, "performance_score": 2.65, "news_momentum_score": 5.22, "hidden_gem_score": 17.6, "hidden_gem_flag": false, "predicted_tier": "Established / Not Flagged", "explanation": "This fund is still under the radar because solid fundamentals but no single standout signal yet.", "expense_ratio_pct": "1.91"}, {"fund_id": 7, "fund_name": "Ganga Momentum Edge Fund", "amc_name": "Ganga Mutual Fund", "fund_manager": "Vikram Kapoor", "category_name": "Sectoral - Banking", "risk_grade": "High", "current_aum_cr": 41104.2, "aum_growth_rate": 0.29, "avg_holding_period_months": 10.7, "holding_period_percentile": 19.8, "cagr": -0.08, "volatility": 0.21, "sharpe_like": -0.4, "holding_strength_score": 11.41, "aum_growth_score": 42.86, "performance_score": 2.99, "news_momentum_score": 5.22, "hidden_gem_score": 17.2, "hidden_gem_flag": false, "predicted_tier": "Established / Not Flagged", "explanation": "This fund is still under the radar because solid fundamentals but no single standout signal yet.", "expense_ratio_pct": "0.56"}, {"fund_id": 2, "fund_name": "Malabar Emerging Opportunities Fund", "amc_name": "Malabar Capital", "fund_manager": "Suresh Pillai", "category_name": "Flexi Cap", "risk_grade": "High", "current_aum_cr": 9067.9, "aum_growth_rate": 0.2, "avg_holding_period_months": 10.8, "holding_period_percentile": 21.5, "cagr": -0.01, "volatility": 0.2, "sharpe_like": -0.04, "holding_strength_score": 13.31, "aum_growth_score": 23.81, "performance_score": 14.41, "news_momentum_score": 12.86, "hidden_gem_score": 16.5, "hidden_gem_flag": false, "predicted_tier": "Established / Not Flagged", "explanation": "This fund is still under the radar because solid fundamentals but no single standout signal yet.", "expense_ratio_pct": "0.49"}]</script>
+<script id="nav-data" type="application/json">{"1": [["2023-08-01", 53.81], ["2023-08-15", 54.74], ["2023-09-01", 51.48], ["2023-09-15", 54.98], ["2023-11-01", 55.9], ["2023-11-15", 54.26], ["2023-12-01", 53.33], ["2023-12-15", 50.58], ["2024-01-01", 50.89], ["2024-01-15", 54.66], ["2024-02-01", 57.86], ["2024-02-15", 62.74], ["2024-03-01", 61.15], ["2024-03-15", 61.29], ["2024-04-01", 59.04], ["2024-04-15", 61.28], ["2024-05-01", 63.32], ["2024-05-15", 58.18], ["2024-07-01", 61.58], ["2024-07-15", 67.04], ["2024-08-01", 65.87], ["2024-08-15", 62.8], ["2024-10-01", 68.85], ["2024-10-15", 74.27], ["2024-11-01", 72.48], ["2024-11-15", 67.58], ["2025-01-01", 66.54], ["2025-01-15", 70.67], ["2025-04-01", 77.8], ["2025-04-15", 75.96], ["2025-05-01", 81.02], ["2025-05-15", 74.71], ["2025-07-01", 73.75], ["2025-07-15", 69.37], ["2025-08-01", 65.01], ["2025-08-15", 64.06], ["2025-09-01", 65.0], ["2025-09-15", 67.78], ["2025-10-01", 70.84], ["2025-10-15", 72.78], ["2025-12-01", 71.84], ["2025-12-15", 75.78], ["2026-01-01", 74.17], ["2026-01-15", 78.48], ["2026-04-01", 76.43], ["2026-04-15", 81.1], ["2026-05-01", 81.65], ["2026-05-15", 84.98], ["2026-06-01", 85.66], ["2026-06-15", 82.68]], "2": [["2023-08-01", 37.33], ["2023-08-15", 36.15], ["2023-09-01", 36.8], ["2023-09-15", 35.23], ["2023-11-01", 34.15], ["2023-11-15", 34.21], ["2023-12-01", 35.11], ["2023-12-15", 35.77], ["2024-01-01", 35.24], ["2024-01-15", 36.5], ["2024-02-01", 33.54], ["2024-02-15", 32.3], ["2024-03-01", 33.12], ["2024-03-15", 33.73], ["2024-04-01", 34.53], ["2024-04-15", 34.53], ["2024-05-01", 34.1], ["2024-05-15", 33.02], ["2024-07-01", 31.88], ["2024-07-15", 30.24], ["2024-08-01", 30.19], ["2024-08-15", 28.05], ["2024-10-01", 29.95], ["2024-10-15", 30.57], ["2024-11-01", 31.7], ["2024-11-15", 32.03], ["2025-01-01", 35.13], ["2025-01-15", 35.5], ["2025-04-01", 39.89], ["2025-04-15", 40.34], ["2025-05-01", 39.91], ["2025-05-15", 39.57], ["2025-07-01", 36.72], ["2025-07-15", 37.42], ["2025-08-01", 36.79], ["2025-08-15", 38.09], ["2025-09-01", 37.89], ["2025-09-15", 37.17], ["2025-10-01", 34.73], ["2025-10-15", 34.22], ["2025-12-01", 33.17], ["2025-12-15", 33.66], ["2026-01-01", 33.2], ["2026-01-15", 34.18], ["2026-04-01", 35.89], ["2026-04-15", 37.06], ["2026-05-01", 36.46], ["2026-05-15", 38.08], ["2026-06-01", 38.14], ["2026-06-15", 35.81]], "3": [["2023-08-01", 103.0], ["2023-08-15", 101.29], ["2023-09-01", 100.51], ["2023-09-15", 96.09], ["2023-11-01", 100.66], ["2023-11-15", 101.9], ["2023-12-01", 102.67], ["2023-12-15", 100.62], ["2024-01-01", 109.05], ["2024-01-15", 113.84], ["2024-02-01", 120.34], ["2024-02-15", 121.12], ["2024-03-01", 114.39], ["2024-03-15", 116.38], ["2024-04-01", 114.83], ["2024-04-15", 111.35], ["2024-05-01", 110.31], ["2024-05-15", 116.7], ["2024-07-01", 124.17], ["2024-07-15", 127.42], ["2024-08-01", 128.93], ["2024-08-15", 121.27], ["2024-10-01", 113.4], ["2024-10-15", 112.61], ["2024-11-01", 114.14], ["2024-11-15", 112.08], ["2025-01-01", 110.94], ["2025-01-15", 111.15], ["2025-04-01", 116.95], ["2025-04-15", 113.9], ["2025-05-01", 113.66], ["2025-05-15", 107.64], ["2025-07-01", 104.46], ["2025-07-15", 91.03], ["2025-08-01", 90.74], ["2025-08-15", 90.95], ["2025-09-01", 92.03], ["2025-09-15", 85.62], ["2025-10-01", 91.46], ["2025-10-15", 91.43], ["2025-12-01", 93.38], ["2025-12-15", 92.61], ["2026-01-01", 96.96], ["2026-01-15", 95.8], ["2026-04-01", 103.44], ["2026-04-15", 98.76], ["2026-05-01", 97.26], ["2026-05-15", 98.43], ["2026-06-01", 98.18], ["2026-06-15", 100.14]], "4": [["2023-08-01", 31.18], ["2023-08-15", 29.2], ["2023-09-01", 29.06], ["2023-09-15", 28.45], ["2023-11-01", 29.13], ["2023-11-15", 30.18], ["2023-12-01", 30.69], ["2023-12-15", 32.26], ["2024-01-01", 34.41], ["2024-01-15", 32.61], ["2024-02-01", 33.49], ["2024-02-15", 34.16], ["2024-03-01", 34.97], ["2024-03-15", 35.83], ["2024-04-01", 38.04], ["2024-04-15", 36.46], ["2024-05-01", 33.43], ["2024-05-15", 32.6], ["2024-07-01", 32.24], ["2024-07-15", 34.47], ["2024-08-01", 35.0], ["2024-08-15", 32.43], ["2024-10-01", 34.12], ["2024-10-15", 36.11], ["2024-11-01", 34.96], ["2024-11-15", 35.56], ["2025-01-01", 35.45], ["2025-01-15", 35.26], ["2025-04-01", 40.78], ["2025-04-15", 41.87], ["2025-05-01", 40.82], ["2025-05-15", 40.87], ["2025-07-01", 45.43], ["2025-07-15", 45.51], ["2025-08-01", 45.12], ["2025-08-15", 44.2], ["2025-09-01", 43.48], ["2025-09-15", 42.35], ["2025-10-01", 39.92], ["2025-10-15", 38.73], ["2025-12-01", 36.5], ["2025-12-15", 38.05], ["2026-01-01", 36.81], ["2026-01-15", 40.31], ["2026-04-01", 41.06], ["2026-04-15", 44.21], ["2026-05-01", 45.35], ["2026-05-15", 46.37], ["2026-06-01", 45.52], ["2026-06-15", 45.55]], "5": [["2023-08-01", 83.69], ["2023-08-15", 86.11], ["2023-09-01", 81.3], ["2023-09-15", 78.65], ["2023-11-01", 72.89], ["2023-11-15", 76.66], ["2023-12-01", 78.52], ["2023-12-15", 81.86], ["2024-01-01", 77.83], ["2024-01-15", 73.72], ["2024-02-01", 71.41], ["2024-02-15", 72.71], ["2024-03-01", 76.01], ["2024-03-15", 81.38], ["2024-04-01", 81.78], ["2024-04-15", 74.82], ["2024-05-01", 74.35], ["2024-05-15", 75.71], ["2024-07-01", 78.99], ["2024-07-15", 80.8], ["2024-08-01", 79.45], ["2024-08-15", 79.62], ["2024-10-01", 79.71], ["2024-10-15", 82.76], ["2024-11-01", 83.89], ["2024-11-15", 84.66], ["2025-01-01", 89.77], ["2025-01-15", 96.53], ["2025-04-01", 91.53], ["2025-04-15", 86.13], ["2025-05-01", 91.71], ["2025-05-15", 93.32], ["2025-07-01", 88.53], ["2025-07-15", 88.34], ["2025-08-01", 93.42], ["2025-08-15", 89.3], ["2025-09-01", 82.34], ["2025-09-15", 87.09], ["2025-10-01", 83.93], ["2025-10-15", 82.87], ["2025-12-01", 87.91], ["2025-12-15", 86.21], ["2026-01-01", 83.93], ["2026-01-15", 86.95], ["2026-04-01", 90.51], ["2026-04-15", 87.17], ["2026-05-01", 85.7], ["2026-05-15", 87.57], ["2026-06-01", 86.54], ["2026-06-15", 83.96]], "6": [["2023-08-01", 88.4], ["2023-08-15", 87.32], ["2023-09-01", 91.85], ["2023-09-15", 92.55], ["2023-11-01", 99.57], ["2023-11-15", 92.91], ["2023-12-01", 89.53], ["2023-12-15", 88.44], ["2024-01-01", 93.03], ["2024-01-15", 95.61], ["2024-02-01", 95.24], ["2024-02-15", 97.41], ["2024-03-01", 97.17], ["2024-03-15", 99.68], ["2024-04-01", 104.82], ["2024-04-15", 102.39], ["2024-05-01", 95.05], ["2024-05-15", 99.36], ["2024-07-01", 103.21], ["2024-07-15", 101.59], ["2024-08-01", 100.96], ["2024-08-15", 101.2], ["2024-10-01", 100.42], ["2024-10-15", 100.53], ["2024-11-01", 98.58], ["2024-11-15", 99.55], ["2025-01-01", 94.72], ["2025-01-15", 91.37], ["2025-04-01", 86.36], ["2025-04-15", 82.97], ["2025-05-01", 80.8], ["2025-05-15", 82.32], ["2025-07-01", 79.0], ["2025-07-15", 79.46], ["2025-08-01", 80.63], ["2025-08-15", 82.7], ["2025-09-01", 84.58], ["2025-09-15", 89.57], ["2025-10-01", 85.41], ["2025-10-15", 88.41], ["2025-12-01", 82.94], ["2025-12-15", 86.09], ["2026-01-01", 89.44], ["2026-01-15", 89.82], ["2026-04-01", 91.94], ["2026-04-15", 100.23], ["2026-05-01", 98.84], ["2026-05-15", 99.02], ["2026-06-01", 97.83], ["2026-06-15", 92.76]], "7": [["2023-08-01", 41.99], ["2023-08-15", 42.02], ["2023-09-01", 41.45], ["2023-09-15", 40.11], ["2023-11-01", 35.77], ["2023-11-15", 37.19], ["2023-12-01", 37.55], ["2023-12-15", 37.54], ["2024-01-01", 36.64], ["2024-01-15", 35.37], ["2024-02-01", 34.86], ["2024-02-15", 35.25], ["2024-03-01", 34.64], ["2024-03-15", 37.21], ["2024-04-01", 38.57], ["2024-04-15", 37.57], ["2024-05-01", 38.46], ["2024-05-15", 38.57], ["2024-07-01", 40.94], ["2024-07-15", 40.23], ["2024-08-01", 40.33], ["2024-08-15", 36.6], ["2024-10-01", 36.44], ["2024-10-15", 35.58], ["2024-11-01", 33.85], ["2024-11-15", 32.48], ["2025-01-01", 31.27], ["2025-01-15", 31.6], ["2025-04-01", 33.13], ["2025-04-15", 33.56], ["2025-05-01", 32.36], ["2025-05-15", 31.88], ["2025-07-01", 32.72], ["2025-07-15", 29.39], ["2025-08-01", 29.63], ["2025-08-15", 30.54], ["2025-09-01", 32.43], ["2025-09-15", 33.49], ["2025-10-01", 34.97], ["2025-10-15", 36.28], ["2025-12-01", 37.31], ["2025-12-15", 34.49], ["2026-01-01", 34.8], ["2026-01-15", 33.37], ["2026-04-01", 32.96], ["2026-04-15", 33.07], ["2026-05-01", 33.35], ["2026-05-15", 32.94], ["2026-06-01", 32.7], ["2026-06-15", 33.51]], "8": [["2023-08-01", 71.16], ["2023-08-15", 75.51], ["2023-09-01", 76.88], ["2023-09-15", 81.5], ["2023-11-01", 85.89], ["2023-11-15", 85.48], ["2023-12-01", 84.59], ["2023-12-15", 84.25], ["2024-01-01", 90.91], ["2024-01-15", 96.27], ["2024-02-01", 102.45], ["2024-02-15", 100.03], ["2024-03-01", 102.12], ["2024-03-15", 105.84], ["2024-04-01", 101.45], ["2024-04-15", 99.66], ["2024-05-01", 104.47], ["2024-05-15", 104.62], ["2024-07-01", 104.42], ["2024-07-15", 106.59], ["2024-08-01", 110.58], ["2024-08-15", 108.49], ["2024-10-01", 104.37], ["2024-10-15", 107.59], ["2024-11-01", 112.06], ["2024-11-15", 115.74], ["2025-01-01", 120.71], ["2025-01-15", 123.92], ["2025-04-01", 128.11], ["2025-04-15", 124.94], ["2025-05-01", 126.55], ["2025-05-15", 122.44], ["2025-07-01", 141.88], ["2025-07-15", 141.56], ["2025-08-01", 146.54], ["2025-08-15", 144.83], ["2025-09-01", 146.29], ["2025-09-15", 143.68], ["2025-10-01", 145.49], ["2025-10-15", 149.0], ["2025-12-01", 148.4], ["2025-12-15", 149.71], ["2026-01-01", 149.92], ["2026-01-15", 150.72], ["2026-04-01", 127.86], ["2026-04-15", 124.99], ["2026-05-01", 122.35], ["2026-05-15", 129.35], ["2026-06-01", 133.37], ["2026-06-15", 129.13]], "9": [["2023-08-01", 97.73], ["2023-08-15", 105.04], ["2023-09-01", 103.55], ["2023-09-15", 105.19], ["2023-11-01", 104.95], ["2023-11-15", 101.55], ["2023-12-01", 100.6], ["2023-12-15", 102.42], ["2024-01-01", 103.72], ["2024-01-15", 98.39], ["2024-02-01", 97.13], ["2024-02-15", 97.92], ["2024-03-01", 100.14], ["2024-03-15", 99.18], ["2024-04-01", 98.15], ["2024-04-15", 88.78], ["2024-05-01", 86.23], ["2024-05-15", 74.63], ["2024-07-01", 79.65], ["2024-07-15", 86.89], ["2024-08-01", 84.69], ["2024-08-15", 82.52], ["2024-10-01", 87.36], ["2024-10-15", 88.84], ["2024-11-01", 88.8], ["2024-11-15", 90.47], ["2025-01-01", 84.32], ["2025-01-15", 85.12], ["2025-04-01", 76.82], ["2025-04-15", 73.96], ["2025-05-01", 76.5], ["2025-05-15", 72.83], ["2025-07-01", 69.32], ["2025-07-15", 69.9], ["2025-08-01", 70.83], ["2025-08-15", 70.41], ["2025-09-01", 68.95], ["2025-09-15", 69.31], ["2025-10-01", 66.17], ["2025-10-15", 61.92], ["2025-12-01", 63.76], ["2025-12-15", 65.43], ["2026-01-01", 71.32], ["2026-01-15", 69.31], ["2026-04-01", 84.18], ["2026-04-15", 85.43], ["2026-05-01", 91.32], ["2026-05-15", 88.91], ["2026-06-01", 95.23], ["2026-06-15", 85.23]], "10": [["2023-08-01", 33.14], ["2023-08-15", 30.78], ["2023-09-01", 33.55], ["2023-09-15", 32.91], ["2023-11-01", 39.98], ["2023-11-15", 39.24], ["2023-12-01", 43.8], ["2023-12-15", 40.31], ["2024-01-01", 44.34], ["2024-01-15", 47.49], ["2024-02-01", 47.04], ["2024-02-15", 50.1], ["2024-03-01", 49.83], ["2024-03-15", 50.09], ["2024-04-01", 47.1], ["2024-04-15", 43.88], ["2024-05-01", 43.95], ["2024-05-15", 44.16], ["2024-07-01", 48.34], ["2024-07-15", 47.57], ["2024-08-01", 49.77], ["2024-08-15", 51.51], ["2024-10-01", 45.66], ["2024-10-15", 46.71], ["2024-11-01", 48.01], ["2024-11-15", 54.11], ["2025-01-01", 63.17], ["2025-01-15", 62.96], ["2025-04-01", 66.77], ["2025-04-15", 65.14], ["2025-05-01", 61.92], ["2025-05-15", 59.16], ["2025-07-01", 66.21], ["2025-07-15", 65.51], ["2025-08-01", 65.39], ["2025-08-15", 63.23], ["2025-09-01", 66.92], ["2025-09-15", 67.08], ["2025-10-01", 68.8], ["2025-10-15", 65.97], ["2025-12-01", 67.64], ["2025-12-15", 69.12], ["2026-01-01", 69.36], ["2026-01-15", 72.91], ["2026-04-01", 74.69], ["2026-04-15", 77.51], ["2026-05-01", 79.76], ["2026-05-15", 76.14], ["2026-06-01", 80.13], ["2026-06-15", 80.77]], "11": [["2023-08-01", 84.84], ["2023-08-15", 86.4], ["2023-09-01", 88.28], ["2023-09-15", 88.0], ["2023-11-01", 84.89], ["2023-11-15", 83.85], ["2023-12-01", 82.08], ["2023-12-15", 83.41], ["2024-01-01", 81.46], ["2024-01-15", 77.41], ["2024-02-01", 73.28], ["2024-02-15", 67.8], ["2024-03-01", 66.07], ["2024-03-15", 63.15], ["2024-04-01", 60.77], ["2024-04-15", 56.69], ["2024-05-01", 59.01], ["2024-05-15", 56.98], ["2024-07-01", 55.18], ["2024-07-15", 53.09], ["2024-08-01", 53.05], ["2024-08-15", 54.85], ["2024-10-01", 58.05], ["2024-10-15", 54.1], ["2024-11-01", 53.26], ["2024-11-15", 53.38], ["2025-01-01", 56.22], ["2025-01-15", 55.85], ["2025-04-01", 63.81], ["2025-04-15", 65.33], ["2025-05-01", 66.3], ["2025-05-15", 64.52], ["2025-07-01", 65.84], ["2025-07-15", 65.95], ["2025-08-01", 69.9], ["2025-08-15", 67.36], ["2025-09-01", 70.37], ["2025-09-15", 67.52], ["2025-10-01", 66.7], ["2025-10-15", 68.61], ["2025-12-01", 65.8], ["2025-12-15", 63.23], ["2026-01-01", 61.46], ["2026-01-15", 61.59], ["2026-04-01", 83.57], ["2026-04-15", 88.2], ["2026-05-01", 98.7], ["2026-05-15", 98.48], ["2026-06-01", 103.84], ["2026-06-15", 103.59]], "12": [["2023-08-01", 29.89], ["2023-08-15", 29.97], ["2023-09-01", 30.62], ["2023-09-15", 30.44], ["2023-11-01", 30.07], ["2023-11-15", 32.66], ["2023-12-01", 32.74], ["2023-12-15", 32.09], ["2024-01-01", 32.71], ["2024-01-15", 35.4], ["2024-02-01", 40.94], ["2024-02-15", 40.19], ["2024-03-01", 37.2], ["2024-03-15", 37.07], ["2024-04-01", 36.98], ["2024-04-15", 37.55], ["2024-05-01", 36.44], ["2024-05-15", 34.67], ["2024-07-01", 32.26], ["2024-07-15", 31.38], ["2024-08-01", 31.73], ["2024-08-15", 31.84], ["2024-10-01", 31.39], ["2024-10-15", 32.43], ["2024-11-01", 29.49], ["2024-11-15", 28.89], ["2025-01-01", 29.85], ["2025-01-15", 29.61], ["2025-04-01", 38.14], ["2025-04-15", 36.9], ["2025-05-01", 35.16], ["2025-05-15", 36.32], ["2025-07-01", 40.94], ["2025-07-15", 39.65], ["2025-08-01", 39.23], ["2025-08-15", 37.1], ["2025-09-01", 38.96], ["2025-09-15", 38.46], ["2025-10-01", 37.86], ["2025-10-15", 36.73], ["2025-12-01", 38.43], ["2025-12-15", 39.02], ["2026-01-01", 39.42], ["2026-01-15", 41.29], ["2026-04-01", 43.09], ["2026-04-15", 42.6], ["2026-05-01", 42.9], ["2026-05-15", 39.97], ["2026-06-01", 41.89], ["2026-06-15", 40.6]], "13": [["2023-08-01", 58.97], ["2023-08-15", 55.19], ["2023-09-01", 56.95], ["2023-09-15", 56.03], ["2023-11-01", 58.71], ["2023-11-15", 57.1], ["2023-12-01", 55.22], ["2023-12-15", 55.89], ["2024-01-01", 60.16], ["2024-01-15", 64.57], ["2024-02-01", 65.23], ["2024-02-15", 67.75], ["2024-03-01", 68.03], ["2024-03-15", 63.73], ["2024-04-01", 68.75], ["2024-04-15", 65.64], ["2024-05-01", 71.71], ["2024-05-15", 69.38], ["2024-07-01", 72.94], ["2024-07-15", 74.13], ["2024-08-01", 78.34], ["2024-08-15", 77.31], ["2024-10-01", 87.63], ["2024-10-15", 90.76], ["2024-11-01", 94.7], ["2024-11-15", 96.64], ["2025-01-01", 87.58], ["2025-01-15", 85.37], ["2025-04-01", 84.92], ["2025-04-15", 88.17], ["2025-05-01", 85.3], ["2025-05-15", 85.97], ["2025-07-01", 94.28], ["2025-07-15", 98.08], ["2025-08-01", 96.51], ["2025-08-15", 101.81], ["2025-09-01", 98.55], ["2025-09-15", 95.7], ["2025-10-01", 97.53], ["2025-10-15", 94.44], ["2025-12-01", 92.65], ["2025-12-15", 90.8], ["2026-01-01", 92.73], ["2026-01-15", 94.92], ["2026-04-01", 80.53], ["2026-04-15", 89.21], ["2026-05-01", 98.07], ["2026-05-15", 100.64], ["2026-06-01", 93.27], ["2026-06-15", 90.72]], "14": [["2023-08-01", 146.18], ["2023-08-15", 142.52], ["2023-09-01", 136.98], ["2023-09-15", 131.3], ["2023-11-01", 141.19], ["2023-11-15", 139.2], ["2023-12-01", 136.5], ["2023-12-15", 135.7], ["2024-01-01", 139.16], ["2024-01-15", 133.3], ["2024-02-01", 130.56], ["2024-02-15", 137.92], ["2024-03-01", 126.94], ["2024-03-15", 132.26], ["2024-04-01", 134.54], ["2024-04-15", 128.44], ["2024-05-01", 131.36], ["2024-05-15", 136.77], ["2024-07-01", 141.52], ["2024-07-15", 142.1], ["2024-08-01", 142.36], ["2024-08-15", 149.04], ["2024-10-01", 148.88], ["2024-10-15", 152.58], ["2024-11-01", 163.48], ["2024-11-15", 169.85], ["2025-01-01", 163.91], ["2025-01-15", 168.46], ["2025-04-01", 164.13], ["2025-04-15", 166.85], ["2025-05-01", 168.26], ["2025-05-15", 166.37], ["2025-07-01", 162.82], ["2025-07-15", 157.25], ["2025-08-01", 161.37], ["2025-08-15", 159.54], ["2025-09-01", 167.06], ["2025-09-15", 165.61], ["2025-10-01", 164.12], ["2025-10-15", 160.86], ["2025-12-01", 143.38], ["2025-12-15", 145.81], ["2026-01-01", 154.26], ["2026-01-15", 156.53], ["2026-04-01", 168.05], ["2026-04-15", 167.37], ["2026-05-01", 165.05], ["2026-05-15", 166.12], ["2026-06-01", 179.66], ["2026-06-15", 173.13]], "15": [["2023-08-01", 126.53], ["2023-08-15", 130.36], ["2023-09-01", 135.53], ["2023-09-15", 139.88], ["2023-11-01", 152.86], ["2023-11-15", 156.04], ["2023-12-01", 158.74], ["2023-12-15", 166.7], ["2024-01-01", 170.46], ["2024-01-15", 172.39], ["2024-02-01", 184.23], ["2024-02-15", 176.9], ["2024-03-01", 184.6], ["2024-03-15", 181.86], ["2024-04-01", 179.38], ["2024-04-15", 178.46], ["2024-05-01", 185.31], ["2024-05-15", 176.25], ["2024-07-01", 178.42], ["2024-07-15", 182.4], ["2024-08-01", 190.53], ["2024-08-15", 193.77], ["2024-10-01", 200.43], ["2024-10-15", 206.01], ["2024-11-01", 218.16], ["2024-11-15", 216.52], ["2025-01-01", 231.75], ["2025-01-15", 238.57], ["2025-04-01", 236.47], ["2025-04-15", 226.76], ["2025-05-01", 231.54], ["2025-05-15", 240.18], ["2025-07-01", 260.98], ["2025-07-15", 258.41], ["2025-08-01", 276.78], ["2025-08-15", 273.73], ["2025-09-01", 272.96], ["2025-09-15", 276.83], ["2025-10-01", 273.83], ["2025-10-15", 269.39], ["2025-12-01", 282.97], ["2025-12-15", 282.93], ["2026-01-01", 299.27], ["2026-01-15", 292.13], ["2026-04-01", 294.38], ["2026-04-15", 303.04], ["2026-05-01", 313.84], ["2026-05-15", 310.65], ["2026-06-01", 303.51], ["2026-06-15", 313.67]], "16": [["2023-08-01", 105.42], ["2023-08-15", 107.49], ["2023-09-01", 104.49], ["2023-09-15", 105.58], ["2023-11-01", 112.57], ["2023-11-15", 110.7], ["2023-12-01", 108.41], ["2023-12-15", 99.91], ["2024-01-01", 103.04], ["2024-01-15", 99.43], ["2024-02-01", 104.22], ["2024-02-15", 107.14], ["2024-03-01", 110.29], ["2024-03-15", 109.06], ["2024-04-01", 117.78], ["2024-04-15", 124.16], ["2024-05-01", 123.65], ["2024-05-15", 128.18], ["2024-07-01", 142.01], ["2024-07-15", 136.72], ["2024-08-01", 143.48], ["2024-08-15", 142.14], ["2024-10-01", 133.98], ["2024-10-15", 143.3], ["2024-11-01", 154.29], ["2024-11-15", 150.8], ["2025-01-01", 157.6], ["2025-01-15", 159.11], ["2025-04-01", 161.95], ["2025-04-15", 160.61], ["2025-05-01", 154.23], ["2025-05-15", 155.4], ["2025-07-01", 158.3], ["2025-07-15", 158.81], ["2025-08-01", 152.14], ["2025-08-15", 152.01], ["2025-09-01", 160.22], ["2025-09-15", 157.39], ["2025-10-01", 159.14], ["2025-10-15", 160.42], ["2025-12-01", 173.92], ["2025-12-15", 171.7], ["2026-01-01", 175.49], ["2026-01-15", 175.95], ["2026-04-01", 156.02], ["2026-04-15", 165.25], ["2026-05-01", 165.18], ["2026-05-15", 163.19], ["2026-06-01", 176.78], ["2026-06-15", 178.11]], "17": [["2023-08-01", 47.83], ["2023-08-15", 48.62], ["2023-09-01", 51.54], ["2023-09-15", 52.11], ["2023-11-01", 55.09], ["2023-11-15", 57.48], ["2023-12-01", 57.61], ["2023-12-15", 59.18], ["2024-01-01", 60.12], ["2024-01-15", 59.41], ["2024-02-01", 59.34], ["2024-02-15", 59.93], ["2024-03-01", 56.66], ["2024-03-15", 56.19], ["2024-04-01", 55.61], ["2024-04-15", 55.3], ["2024-05-01", 54.83], ["2024-05-15", 58.24], ["2024-07-01", 58.99], ["2024-07-15", 59.05], ["2024-08-01", 59.83], ["2024-08-15", 59.31], ["2024-10-01", 62.96], ["2024-10-15", 59.71], ["2024-11-01", 58.32], ["2024-11-15", 58.77], ["2025-01-01", 56.07], ["2025-01-15", 54.0], ["2025-04-01", 66.66], ["2025-04-15", 70.6], ["2025-05-01", 72.93], ["2025-05-15", 69.48], ["2025-07-01", 69.13], ["2025-07-15", 71.64], ["2025-08-01", 78.25], ["2025-08-15", 77.45], ["2025-09-01", 75.15], ["2025-09-15", 75.9], ["2025-10-01", 83.38], ["2025-10-15", 89.04], ["2025-12-01", 96.59], ["2025-12-15", 102.13], ["2026-01-01", 105.61], ["2026-01-15", 106.76], ["2026-04-01", 89.15], ["2026-04-15", 91.23], ["2026-05-01", 93.7], ["2026-05-15", 95.34], ["2026-06-01", 97.79], ["2026-06-15", 96.6]], "18": [["2023-08-01", 117.63], ["2023-08-15", 122.68], ["2023-09-01", 132.0], ["2023-09-15", 125.75], ["2023-11-01", 156.33], ["2023-11-15", 160.19], ["2023-12-01", 154.05], ["2023-12-15", 155.47], ["2024-01-01", 155.59], ["2024-01-15", 163.43], ["2024-02-01", 140.08], ["2024-02-15", 143.92], ["2024-03-01", 147.71], ["2024-03-15", 143.21], ["2024-04-01", 131.0], ["2024-04-15", 135.93], ["2024-05-01", 129.19], ["2024-05-15", 141.21], ["2024-07-01", 147.44], ["2024-07-15", 146.84], ["2024-08-01", 150.61], ["2024-08-15", 146.22], ["2024-10-01", 138.15], ["2024-10-15", 141.15], ["2024-11-01", 148.39], ["2024-11-15", 145.45], ["2025-01-01", 145.29], ["2025-01-15", 132.46], ["2025-04-01", 136.94], ["2025-04-15", 127.58], ["2025-05-01", 136.28], ["2025-05-15", 138.65], ["2025-07-01", 153.21], ["2025-07-15", 150.89], ["2025-08-01", 161.87], ["2025-08-15", 170.52], ["2025-09-01", 180.78], ["2025-09-15", 168.8], ["2025-10-01", 174.46], ["2025-10-15", 171.39], ["2025-12-01", 185.68], ["2025-12-15", 188.47], ["2026-01-01", 175.99], ["2026-01-15", 173.9], ["2026-04-01", 224.88], ["2026-04-15", 216.89], ["2026-05-01", 221.42], ["2026-05-15", 203.34], ["2026-06-01", 216.71], ["2026-06-15", 215.13]], "19": [["2023-08-01", 75.17], ["2023-08-15", 72.25], ["2023-09-01", 78.74], ["2023-09-15", 77.59], ["2023-11-01", 79.35], ["2023-11-15", 77.05], ["2023-12-01", 66.95], ["2023-12-15", 66.01], ["2024-01-01", 68.27], ["2024-01-15", 69.65], ["2024-02-01", 73.4], ["2024-02-15", 76.39], ["2024-03-01", 74.35], ["2024-03-15", 72.05], ["2024-04-01", 76.95], ["2024-04-15", 80.63], ["2024-05-01", 78.63], ["2024-05-15", 75.37], ["2024-07-01", 76.2], ["2024-07-15", 84.72], ["2024-08-01", 81.01], ["2024-08-15", 79.76], ["2024-10-01", 80.21], ["2024-10-15", 84.29], ["2024-11-01", 80.37], ["2024-11-15", 83.53], ["2025-01-01", 89.14], ["2025-01-15", 86.08], ["2025-04-01", 94.16], ["2025-04-15", 100.66], ["2025-05-01", 98.71], ["2025-05-15", 101.14], ["2025-07-01", 100.12], ["2025-07-15", 98.74], ["2025-08-01", 101.0], ["2025-08-15", 97.07], ["2025-09-01", 92.0], ["2025-09-15", 88.18], ["2025-10-01", 82.4], ["2025-10-15", 89.04], ["2025-12-01", 87.14], ["2025-12-15", 88.96], ["2026-01-01", 89.72], ["2026-01-15", 92.53], ["2026-04-01", 93.48], ["2026-04-15", 95.59], ["2026-05-01", 100.4], ["2026-05-15", 104.28], ["2026-06-01", 101.18], ["2026-06-15", 95.06]], "20": [["2023-08-01", 23.93], ["2023-08-15", 23.15], ["2023-09-01", 23.41], ["2023-09-15", 24.55], ["2023-11-01", 25.3], ["2023-11-15", 25.35], ["2023-12-01", 25.45], ["2023-12-15", 25.19], ["2024-01-01", 25.22], ["2024-01-15", 26.01], ["2024-02-01", 25.63], ["2024-02-15", 24.23], ["2024-03-01", 24.33], ["2024-03-15", 23.35], ["2024-04-01", 23.64], ["2024-04-15", 23.24], ["2024-05-01", 22.92], ["2024-05-15", 22.85], ["2024-07-01", 23.06], ["2024-07-15", 22.2], ["2024-08-01", 22.56], ["2024-08-15", 23.29], ["2024-10-01", 24.18], ["2024-10-15", 25.66], ["2024-11-01", 24.18], ["2024-11-15", 26.54], ["2025-01-01", 28.68], ["2025-01-15", 30.43], ["2025-04-01", 29.87], ["2025-04-15", 29.49], ["2025-05-01", 30.17], ["2025-05-15", 28.55], ["2025-07-01", 29.38], ["2025-07-15", 28.87], ["2025-08-01", 29.18], ["2025-08-15", 28.1], ["2025-09-01", 26.96], ["2025-09-15", 26.68], ["2025-10-01", 27.1], ["2025-10-15", 28.41], ["2025-12-01", 27.47], ["2025-12-15", 26.74], ["2026-01-01", 27.38], ["2026-01-15", 26.09], ["2026-04-01", 26.29], ["2026-04-15", 26.74], ["2026-05-01", 24.64], ["2026-05-15", 25.93], ["2026-06-01", 26.97], ["2026-06-15", 26.96]], "21": [["2023-08-01", 105.87], ["2023-08-15", 97.46], ["2023-09-01", 92.52], ["2023-09-15", 84.27], ["2023-11-01", 83.74], ["2023-11-15", 82.19], ["2023-12-01", 78.95], ["2023-12-15", 82.52], ["2024-01-01", 90.27], ["2024-01-15", 96.49], ["2024-02-01", 113.92], ["2024-02-15", 111.0], ["2024-03-01", 110.5], ["2024-03-15", 117.06], ["2024-04-01", 108.28], ["2024-04-15", 105.61], ["2024-05-01", 101.28], ["2024-05-15", 103.74], ["2024-07-01", 79.33], ["2024-07-15", 76.83], ["2024-08-01", 73.48], ["2024-08-15", 72.52], ["2024-10-01", 77.57], ["2024-10-15", 76.28], ["2024-11-01", 74.44], ["2024-11-15", 67.93], ["2025-01-01", 65.61], ["2025-01-15", 63.56], ["2025-04-01", 65.89], ["2025-04-15", 69.11], ["2025-05-01", 65.88], ["2025-05-15", 68.52], ["2025-07-01", 71.11], ["2025-07-15", 64.73], ["2025-08-01", 64.28], ["2025-08-15", 67.33], ["2025-09-01", 68.03], ["2025-09-15", 66.54], ["2025-10-01", 63.68], ["2025-10-15", 66.0], ["2025-12-01", 65.02], ["2025-12-15", 64.03], ["2026-01-01", 66.74], ["2026-01-15", 71.03], ["2026-04-01", 68.95], ["2026-04-15", 71.31], ["2026-05-01", 70.67], ["2026-05-15", 67.64], ["2026-06-01", 68.67], ["2026-06-15", 75.23]], "22": [["2023-08-01", 100.27], ["2023-08-15", 100.32], ["2023-09-01", 105.18], ["2023-09-15", 102.93], ["2023-11-01", 105.93], ["2023-11-15", 99.06], ["2023-12-01", 99.8], ["2023-12-15", 102.09], ["2024-01-01", 102.82], ["2024-01-15", 107.37], ["2024-02-01", 109.04], ["2024-02-15", 106.1], ["2024-03-01", 106.6], ["2024-03-15", 112.86], ["2024-04-01", 120.97], ["2024-04-15", 118.89], ["2024-05-01", 128.35], ["2024-05-15", 128.0], ["2024-07-01", 129.88], ["2024-07-15", 127.24], ["2024-08-01", 121.95], ["2024-08-15", 114.19], ["2024-10-01", 111.62], ["2024-10-15", 113.55], ["2024-11-01", 111.29], ["2024-11-15", 116.5], ["2025-01-01", 112.08], ["2025-01-15", 115.45], ["2025-04-01", 116.91], ["2025-04-15", 115.16], ["2025-05-01", 113.56], ["2025-05-15", 109.57], ["2025-07-01", 109.35], ["2025-07-15", 114.4], ["2025-08-01", 109.16], ["2025-08-15", 106.28], ["2025-09-01", 107.25], ["2025-09-15", 106.93], ["2025-10-01", 103.02], ["2025-10-15", 108.45], ["2025-12-01", 104.66], ["2025-12-15", 103.48], ["2026-01-01", 103.41], ["2026-01-15", 103.47], ["2026-04-01", 85.67], ["2026-04-15", 86.73], ["2026-05-01", 89.11], ["2026-05-15", 83.23], ["2026-06-01", 87.25], ["2026-06-15", 89.65]], "23": [["2023-08-01", 114.45], ["2023-08-15", 114.06], ["2023-09-01", 121.62], ["2023-09-15", 123.24], ["2023-11-01", 123.59], ["2023-11-15", 120.79], ["2023-12-01", 123.14], ["2023-12-15", 123.72], ["2024-01-01", 122.15], ["2024-01-15", 121.52], ["2024-02-01", 124.16], ["2024-02-15", 125.46], ["2024-03-01", 118.39], ["2024-03-15", 123.51], ["2024-04-01", 118.62], ["2024-04-15", 118.59], ["2024-05-01", 114.0], ["2024-05-15", 112.06], ["2024-07-01", 120.51], ["2024-07-15", 124.61], ["2024-08-01", 131.16], ["2024-08-15", 135.41], ["2024-10-01", 131.48], ["2024-10-15", 137.49], ["2024-11-01", 137.31], ["2024-11-15", 135.25], ["2025-01-01", 132.06], ["2025-01-15", 131.03], ["2025-04-01", 137.77], ["2025-04-15", 134.86], ["2025-05-01", 137.75], ["2025-05-15", 141.62], ["2025-07-01", 151.33], ["2025-07-15", 152.19], ["2025-08-01", 147.17], ["2025-08-15", 149.51], ["2025-09-01", 152.0], ["2025-09-15", 150.03], ["2025-10-01", 156.8], ["2025-10-15", 157.87], ["2025-12-01", 156.02], ["2025-12-15", 156.02], ["2026-01-01", 153.89], ["2026-01-15", 155.99], ["2026-04-01", 152.29], ["2026-04-15", 145.84], ["2026-05-01", 148.84], ["2026-05-15", 153.29], ["2026-06-01", 158.15], ["2026-06-15", 153.68]], "24": [["2023-08-01", 58.73], ["2023-08-15", 58.37], ["2023-09-01", 59.06], ["2023-09-15", 57.03], ["2023-11-01", 57.46], ["2023-11-15", 56.91], ["2023-12-01", 55.36], ["2023-12-15", 55.07], ["2024-01-01", 57.15], ["2024-01-15", 55.58], ["2024-02-01", 56.16], ["2024-02-15", 54.73], ["2024-03-01", 54.31], ["2024-03-15", 53.4], ["2024-04-01", 55.24], ["2024-04-15", 53.74], ["2024-05-01", 52.55], ["2024-05-15", 52.18], ["2024-07-01", 53.7], ["2024-07-15", 55.59], ["2024-08-01", 56.51], ["2024-08-15", 56.72], ["2024-10-01", 56.38], ["2024-10-15", 57.56], ["2024-11-01", 57.53], ["2024-11-15", 59.16], ["2025-01-01", 62.39], ["2025-01-15", 63.36], ["2025-04-01", 67.51], ["2025-04-15", 67.99], ["2025-05-01", 67.58], ["2025-05-15", 64.57], ["2025-07-01", 63.73], ["2025-07-15", 65.87], ["2025-08-01", 67.34], ["2025-08-15", 66.78], ["2025-09-01", 64.79], ["2025-09-15", 67.32], ["2025-10-01", 69.66], ["2025-10-15", 71.66], ["2025-12-01", 75.84], ["2025-12-15", 75.54], ["2026-01-01", 73.52], ["2026-01-15", 74.58], ["2026-04-01", 76.81], ["2026-04-15", 72.71], ["2026-05-01", 72.45], ["2026-05-15", 72.3], ["2026-06-01", 70.17], ["2026-06-15", 71.1]], "25": [["2023-08-01", 74.17], ["2023-08-15", 76.79], ["2023-09-01", 82.7], ["2023-09-15", 87.83], ["2023-11-01", 82.42], ["2023-11-15", 85.43], ["2023-12-01", 89.27], ["2023-12-15", 92.69], ["2024-01-01", 91.58], ["2024-01-15", 91.85], ["2024-02-01", 109.08], ["2024-02-15", 117.06], ["2024-03-01", 125.85], ["2024-03-15", 126.37], ["2024-04-01", 131.56], ["2024-04-15", 131.73], ["2024-05-01", 133.87], ["2024-05-15", 134.92], ["2024-07-01", 136.71], ["2024-07-15", 133.85], ["2024-08-01", 131.3], ["2024-08-15", 124.54], ["2024-10-01", 116.66], ["2024-10-15", 125.87], ["2024-11-01", 125.93], ["2024-11-15", 130.62], ["2025-01-01", 131.02], ["2025-01-15", 132.43], ["2025-04-01", 134.16], ["2025-04-15", 126.83], ["2025-05-01", 123.09], ["2025-05-15", 125.8], ["2025-07-01", 134.52], ["2025-07-15", 139.67], ["2025-08-01", 134.64], ["2025-08-15", 148.7], ["2025-09-01", 148.72], ["2025-09-15", 140.42], ["2025-10-01", 154.01], ["2025-10-15", 169.53], ["2025-12-01", 150.29], ["2025-12-15", 160.45], ["2026-01-01", 172.21], ["2026-01-15", 170.64], ["2026-04-01", 148.52], ["2026-04-15", 144.77], ["2026-05-01", 158.67], ["2026-05-15", 151.01], ["2026-06-01", 139.4], ["2026-06-15", 145.71]], "26": [["2023-08-01", 56.69], ["2023-08-15", 51.93], ["2023-09-01", 57.91], ["2023-09-15", 54.94], ["2023-11-01", 66.56], ["2023-11-15", 69.37], ["2023-12-01", 68.25], ["2023-12-15", 67.14], ["2024-01-01", 68.53], ["2024-01-15", 69.03], ["2024-02-01", 68.84], ["2024-02-15", 67.75], ["2024-03-01", 69.88], ["2024-03-15", 69.5], ["2024-04-01", 70.7], ["2024-04-15", 71.11], ["2024-05-01", 68.3], ["2024-05-15", 70.68], ["2024-07-01", 70.57], ["2024-07-15", 73.21], ["2024-08-01", 66.57], ["2024-08-15", 65.07], ["2024-10-01", 74.4], ["2024-10-15", 77.81], ["2024-11-01", 78.47], ["2024-11-15", 73.63], ["2025-01-01", 69.93], ["2025-01-15", 68.75], ["2025-04-01", 56.38], ["2025-04-15", 56.68], ["2025-05-01", 62.53], ["2025-05-15", 65.81], ["2025-07-01", 74.11], ["2025-07-15", 77.19], ["2025-08-01", 76.57], ["2025-08-15", 73.6], ["2025-09-01", 69.35], ["2025-09-15", 68.9], ["2025-10-01", 70.77], ["2025-10-15", 68.69], ["2025-12-01", 65.82], ["2025-12-15", 64.86], ["2026-01-01", 63.97], ["2026-01-15", 62.27], ["2026-04-01", 51.56], ["2026-04-15", 50.13], ["2026-05-01", 48.81], ["2026-05-15", 50.79], ["2026-06-01", 55.75], ["2026-06-15", 53.47]], "27": [["2023-08-01", 95.2], ["2023-08-15", 93.09], ["2023-09-01", 94.7], ["2023-09-15", 91.48], ["2023-11-01", 87.96], ["2023-11-15", 88.66], ["2023-12-01", 87.33], ["2023-12-15", 85.29], ["2024-01-01", 87.39], ["2024-01-15", 87.09], ["2024-02-01", 85.74], ["2024-02-15", 87.85], ["2024-03-01", 85.59], ["2024-03-15", 90.06], ["2024-04-01", 82.47], ["2024-04-15", 87.47], ["2024-05-01", 92.85], ["2024-05-15", 85.79], ["2024-07-01", 101.85], ["2024-07-15", 104.74], ["2024-08-01", 111.24], ["2024-08-15", 121.57], ["2024-10-01", 142.76], ["2024-10-15", 147.84], ["2024-11-01", 154.58], ["2024-11-15", 157.52], ["2025-01-01", 165.78], ["2025-01-15", 165.4], ["2025-04-01", 145.67], ["2025-04-15", 156.15], ["2025-05-01", 150.58], ["2025-05-15", 161.0], ["2025-07-01", 151.4], ["2025-07-15", 155.3], ["2025-08-01", 143.05], ["2025-08-15", 144.85], ["2025-09-01", 157.4], ["2025-09-15", 147.27], ["2025-10-01", 150.11], ["2025-10-15", 139.85], ["2025-12-01", 148.36], ["2025-12-15", 151.39], ["2026-01-01", 139.26], ["2026-01-15", 130.87], ["2026-04-01", 139.66], ["2026-04-15", 141.24], ["2026-05-01", 145.88], ["2026-05-15", 153.31], ["2026-06-01", 148.42], ["2026-06-15", 154.15]], "28": [["2023-08-01", 121.88], ["2023-08-15", 126.63], ["2023-09-01", 119.75], ["2023-09-15", 113.37], ["2023-11-01", 120.21], ["2023-11-15", 121.61], ["2023-12-01", 112.37], ["2023-12-15", 121.81], ["2024-01-01", 111.89], ["2024-01-15", 107.72], ["2024-02-01", 100.46], ["2024-02-15", 102.91], ["2024-03-01", 104.72], ["2024-03-15", 104.33], ["2024-04-01", 109.78], ["2024-04-15", 112.59], ["2024-05-01", 117.83], ["2024-05-15", 113.16], ["2024-07-01", 101.3], ["2024-07-15", 93.03], ["2024-08-01", 103.53], ["2024-08-15", 100.63], ["2024-10-01", 92.68], ["2024-10-15", 86.35], ["2024-11-01", 92.88], ["2024-11-15", 92.87], ["2025-01-01", 86.28], ["2025-01-15", 86.87], ["2025-04-01", 91.56], ["2025-04-15", 98.35], ["2025-05-01", 100.53], ["2025-05-15", 102.22], ["2025-07-01", 90.29], ["2025-07-15", 89.49], ["2025-08-01", 83.33], ["2025-08-15", 79.77], ["2025-09-01", 75.64], ["2025-09-15", 81.12], ["2025-10-01", 87.57], ["2025-10-15", 85.31], ["2025-12-01", 92.7], ["2025-12-15", 87.4], ["2026-01-01", 86.99], ["2026-01-15", 82.32], ["2026-04-01", 91.51], ["2026-04-15", 91.42], ["2026-05-01", 86.57], ["2026-05-15", 82.88], ["2026-06-01", 83.22], ["2026-06-15", 86.28]], "29": [["2023-08-01", 112.6], ["2023-08-15", 114.17], ["2023-09-01", 113.35], ["2023-09-15", 113.75], ["2023-11-01", 119.2], ["2023-11-15", 122.54], ["2023-12-01", 125.83], ["2023-12-15", 127.74], ["2024-01-01", 125.0], ["2024-01-15", 122.41], ["2024-02-01", 126.75], ["2024-02-15", 120.34], ["2024-03-01", 119.34], ["2024-03-15", 118.38], ["2024-04-01", 119.58], ["2024-04-15", 123.43], ["2024-05-01", 126.99], ["2024-05-15", 127.83], ["2024-07-01", 143.49], ["2024-07-15", 139.63], ["2024-08-01", 142.46], ["2024-08-15", 134.06], ["2024-10-01", 125.94], ["2024-10-15", 122.95], ["2024-11-01", 124.23], ["2024-11-15", 126.06], ["2025-01-01", 116.09], ["2025-01-15", 110.03], ["2025-04-01", 98.23], ["2025-04-15", 95.28], ["2025-05-01", 99.14], ["2025-05-15", 105.96], ["2025-07-01", 118.18], ["2025-07-15", 119.27], ["2025-08-01", 113.32], ["2025-08-15", 120.23], ["2025-09-01", 122.78], ["2025-09-15", 124.94], ["2025-10-01", 129.23], ["2025-10-15", 124.51], ["2025-12-01", 129.91], ["2025-12-15", 128.99], ["2026-01-01", 123.41], ["2026-01-15", 120.18], ["2026-04-01", 116.86], ["2026-04-15", 117.59], ["2026-05-01", 111.65], ["2026-05-15", 113.52], ["2026-06-01", 104.55], ["2026-06-15", 106.31]], "30": [["2023-08-01", 71.17], ["2023-08-15", 73.35], ["2023-09-01", 77.49], ["2023-09-15", 78.62], ["2023-11-01", 83.07], ["2023-11-15", 81.41], ["2023-12-01", 80.05], ["2023-12-15", 78.82], ["2024-01-01", 79.94], ["2024-01-15", 83.4], ["2024-02-01", 81.83], ["2024-02-15", 83.88], ["2024-03-01", 89.73], ["2024-03-15", 98.02], ["2024-04-01", 99.5], ["2024-04-15", 104.11], ["2024-05-01", 107.7], ["2024-05-15", 105.45], ["2024-07-01", 105.18], ["2024-07-15", 102.04], ["2024-08-01", 101.03], ["2024-08-15", 102.78], ["2024-10-01", 95.27], ["2024-10-15", 94.31], ["2024-11-01", 92.28], ["2024-11-15", 93.93], ["2025-01-01", 94.37], ["2025-01-15", 89.0], ["2025-04-01", 94.72], ["2025-04-15", 97.67], ["2025-05-01", 100.16], ["2025-05-15", 103.18], ["2025-07-01", 112.02], ["2025-07-15", 110.18], ["2025-08-01", 111.19], ["2025-08-15", 103.23], ["2025-09-01", 108.19], ["2025-09-15", 108.03], ["2025-10-01", 111.25], ["2025-10-15", 108.22], ["2025-12-01", 119.63], ["2025-12-15", 117.3], ["2026-01-01", 120.7], ["2026-01-15", 114.3], ["2026-04-01", 116.16], ["2026-04-15", 114.49], ["2026-05-01", 115.38], ["2026-05-15", 117.86], ["2026-06-01", 120.07], ["2026-06-15", 123.05]]}</script>
+<script>
+const FUNDS = JSON.parse(document.getElementById('fund-data').textContent);
+const NAV_TRENDS = JSON.parse(document.getElementById('nav-data').textContent);
+
+const fmtCr = n => n >= 1000 ? (n/1000).toFixed(1) + 'K' : n.toFixed(0);
+const fmtINR = n => '₹' + Math.round(n).toLocaleString('en-IN');
+const catColor = c => {
+  if (c.includes('Large')) return 'var(--green-300)';
+  if (c.includes('Mid') || c.includes('Small')) return '#7FA8D9';
+  return '#CFE0D3';
+};
+function riskClass(r){ return 'risk-' + r.replace(' ',''); }
+
+/* category average CAGR, computed client-side for the comparison chart */
+const CATEGORY_AVG = {};
+(function(){
+  const groups = {};
+  FUNDS.forEach(f => { (groups[f.category_name] ||= []).push(f.cagr); });
+  Object.keys(groups).forEach(k => {
+    CATEGORY_AVG[k] = groups[k].reduce((a,b)=>a+b,0) / groups[k].length;
+  });
+})();
+
+/* ---------- Animated stat cards ---------- */
+function animateValue(el, end, suffix){
+  const start = 0, duration = 900, startTime = performance.now();
+  function tick(now){
+    const p = Math.min(1, (now-startTime)/duration);
+    const eased = 1 - Math.pow(1-p, 3);
+    const val = start + (end-start)*eased;
+    el.textContent = Math.round(val).toLocaleString('en-IN') + (suffix||'');
+    if (p < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+(function renderStats(){
+  const total = FUNDS.length;
+  const gems = FUNDS.filter(f => f.hidden_gem_flag);
+  const totalAum = FUNDS.reduce((s,f)=>s+f.current_aum_cr,0);
+  const avgHold = FUNDS.reduce((s,f)=>s+f.avg_holding_period_months,0)/total;
+
+  const cards = [
+    {label:'Funds tracked', end: total, unit:'schemes'},
+    {label:'Hidden Gems flagged', end: gems.length, unit:`of ${total}`, delta:`${Math.round(gems.length/total*100)}% of universe`},
+    {label:'Total AUM analysed', end: totalAum, unit:'crore', isCr:true},
+    {label:'Avg. holding period', end: avgHold, unit:'months'}
+  ];
+  document.getElementById('stat-row').innerHTML = cards.map((c,i) => `
+    <div class="stat-card">
+      <div class="label">${c.label}</div>
+      <div class="value">${c.isCr ? '₹' : ''}<span id="stat-${i}">0</span> <span class="unit">${c.unit||''}</span></div>
+      ${c.delta ? `<div class="delta up">↑ ${c.delta}</div>` : ''}
+    </div>
+  `).join('');
+  cards.forEach((c,i) => {
+    const el = document.getElementById('stat-'+i);
+    if (c.isCr){
+      let v = 0; const target = c.end;
+      const start = performance.now();
+      requestAnimationFrame(function tick(now){
+        const p = Math.min(1,(now-start)/900); const eased = 1-Math.pow(1-p,3);
+        el.textContent = fmtCr(target*eased);
+        if (p<1) requestAnimationFrame(tick);
+      });
+    } else {
+      animateValue(el, c.end, '');
+    }
+  });
+})();
+
+/* ---------- Hero decorative chart ---------- */
+(function renderHeroChart(){
+  const svg = document.getElementById('hero-chart');
+  const W = 400, H = 150, PAD = 6;
+  // stylised "quiet compounder" curve: gentle steady climb with low noise
+  const pts = [];
+  let v = 60;
+  for (let i = 0; i <= 40; i++){
+    v += 1.6 + Math.sin(i/4)*1.1 + (Math.random()-0.5)*1.4;
+    pts.push(v);
+  }
+  const min = Math.min(...pts), max = Math.max(...pts);
+  const path = pts.map((p,i) => {
+    const x = PAD + (i/(pts.length-1)) * (W-PAD*2);
+    const y = H - PAD - ((p-min)/(max-min)) * (H-PAD*2);
+    return `${i===0?'M':'L'}${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(' ');
+  const area = path + ` L${W-PAD},${H-PAD} L${PAD},${H-PAD} Z`;
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="heroGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#E8B94A" stop-opacity="0.4"/>
+        <stop offset="100%" stop-color="#E8B94A" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <path d="${area}" fill="url(#heroGrad)"/>
+    <path d="${path}" fill="none" stroke="#E8B94A" stroke-width="2.5" stroke-linecap="round"/>
+  `;
+})();
+
+/* ---------- Spotlight cards ---------- */
+function renderSpotlight(){
+  const top3 = [...FUNDS].filter(f=>f.hidden_gem_flag).sort((a,b)=>b.hidden_gem_score-a.hidden_gem_score).slice(0,3);
+  const shown = top3.length ? top3 : [...FUNDS].sort((a,b)=>b.hidden_gem_score-a.hidden_gem_score).slice(0,3);
+  document.getElementById('spotlight-grid').innerHTML = shown.map((f,i) => {
+    const topReason = [
+      ['Holding strength', f.holding_strength_score, `investors hold it ${f.avg_holding_period_months.toFixed(0)} months on average (${f.holding_period_percentile.toFixed(0)}th percentile)`],
+      ['AUM growth', f.aum_growth_score, `AUM has grown ${(f.aum_growth_rate*100).toFixed(0)}% YoY, outpacing most ${f.category_name} peers`],
+      ['performance', f.performance_score, `a ${(f.cagr*100).toFixed(1)}% CAGR at controlled volatility`],
+    ].sort((a,b)=>b[1]-a[1])[0];
+    return `
+    <div class="spotlight-card" data-id="${f.fund_id}">
+      <div class="spotlight-rank">#${i+1} this week</div>
+      <div class="spotlight-name">${f.fund_name}</div>
+      <div class="spotlight-cat">${f.category_name} · ${f.amc_name || ''}</div>
+      <div class="spotlight-score"><b>${f.hidden_gem_score.toFixed(0)}</b><span>/ 100 · ${f.predicted_tier}</span></div>
+      <div class="spotlight-why">Why: ${topReason[2]}.</div>
+      <div class="spotlight-cta">See full breakdown →</div>
+    </div>`;
+  }).join('');
+  document.querySelectorAll('.spotlight-card').forEach(c => c.addEventListener('click', () => openDetail(c.dataset.id)));
+}
+renderSpotlight();
+
+/* ---------- Scroll reveal ---------- */
+(function initReveal(){
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+})();
+
+/* ---------- Radar (signature scatter) ---------- */
+function renderRadar(){
+  const svg = document.getElementById('radar-svg');
+  const W = 1120, H = 480, PAD = 56;
+  const maxAum = Math.max(...FUNDS.map(f=>f.current_aum_cr));
+
+  let html = '';
+  const midX = PAD + (W - PAD*2)/2, midY = PAD + (H - PAD*2)/2;
+  html += `<line x1="${midX}" y1="${PAD}" x2="${midX}" y2="${H-PAD}" stroke="#2C4A3A" stroke-dasharray="3,5"/>`;
+  html += `<line x1="${PAD}" y1="${midY}" x2="${W-PAD}" y2="${midY}" stroke="#2C4A3A" stroke-dasharray="3,5"/>`;
+
+  html += `<text x="${PAD}" y="${H-PAD+28}" class="axis-label">← Shorter holding</text>`;
+  html += `<text x="${W-PAD}" y="${H-PAD+28}" class="axis-label" text-anchor="end">Longer holding, more conviction →</text>`;
+  html += `<text x="${PAD-40}" y="${PAD}" class="axis-label" transform="rotate(-90 ${PAD-40} ${PAD})">Faster AUM growth ↑</text>`;
+  html += `<text x="${W-PAD}" y="${PAD+18}" class="quad-label" text-anchor="end">QUIET COMPOUNDERS</text>`;
+  html += `<text x="${PAD}" y="${PAD+18}" class="quad-label">EARLY / UNPROVEN</text>`;
+  html += `<text x="${PAD}" y="${H-PAD-10}" class="quad-label">SLOW &amp; STEADY</text>`;
+  html += `<text x="${W-PAD}" y="${H-PAD-10}" class="quad-label" text-anchor="end">ALREADY DISCOVERED</text>`;
+
+  FUNDS.forEach(f => {
+    const x = PAD + (f.holding_period_percentile/100) * (W - PAD*2);
+    const y = (H-PAD) - (f.aum_growth_score/100) * (H - PAD*2);
+    const r = 5 + Math.sqrt(f.current_aum_cr/maxAum) * 16;
+    const color = f.hidden_gem_flag ? 'var(--yellow)' : catColor(f.category_name);
+    const cls = f.hidden_gem_flag ? 'radar-dot gem-dot' : 'radar-dot';
+    html += `<circle class="${cls}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" fill="${color}" fill-opacity="0.85" stroke="${f.hidden_gem_flag ? '#fff' : 'none'}" stroke-width="1.2" data-id="${f.fund_id}"/>`;
+  });
+
+  svg.innerHTML = html;
+
+  const tooltip = document.getElementById('radar-tooltip');
+  const shell = document.querySelector('.radar-shell');
+  svg.querySelectorAll('.radar-dot').forEach(dot => {
+    const f = FUNDS.find(x => x.fund_id == dot.dataset.id);
+    dot.addEventListener('mousemove', e => {
+      const rect = shell.getBoundingClientRect();
+      tooltip.style.left = (e.clientX - rect.left + 14) + 'px';
+      tooltip.style.top = (e.clientY - rect.top - 10) + 'px';
+      tooltip.style.opacity = 1;
+      tooltip.innerHTML = `<b>${f.fund_name}</b>${f.category_name} · Score ${f.hidden_gem_score}${f.hidden_gem_flag ? ' · <span style="color:#B3862A">Hidden Gem</span>' : ''}`;
+    });
+    dot.addEventListener('mouseleave', () => tooltip.style.opacity = 0);
+    dot.addEventListener('click', () => openDetail(f.fund_id));
+  });
+}
+renderRadar();
+
+/* ---------- Explorer table ---------- */
+const catSelect = document.getElementById('category-filter');
+[...new Set(FUNDS.map(f=>f.category_name))].sort().forEach(c => {
+  catSelect.innerHTML += `<option value="${c}">${c}</option>`;
+});
+
+let sortKey = 'hidden_gem_score', sortDir = -1;
+const GLOBAL_TOP3 = [...FUNDS].sort((a,b)=>b.hidden_gem_score-a.hidden_gem_score).slice(0,3).map(f=>f.fund_id);
+
+function renderTable(){
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const cat = catSelect.value;
+  const gemOnly = document.getElementById('gem-filter').value === 'gems';
+
+  const rows = FUNDS
+    .filter(f => f.fund_name.toLowerCase().includes(q) || (f.amc_name||'').toLowerCase().includes(q))
+    .filter(f => !cat || f.category_name === cat)
+    .filter(f => !gemOnly || f.hidden_gem_flag)
+    .sort((a,b) => {
+      const av = a[sortKey], bv = b[sortKey];
+      if (typeof av === 'string') return av.localeCompare(bv) * sortDir;
+      return (av - bv) * sortDir;
+    });
+
+  document.getElementById('fund-tbody').innerHTML = rows.map(f => {
+    const rank = GLOBAL_TOP3.indexOf(f.fund_id);
+    const badge = rank >= 0 ? `<span class="rank-badge r${rank+1}">${rank+1}</span>` : '';
+    return `
+    <tr data-id="${f.fund_id}">
+      <td>
+        <div class="fund-name">${badge}${f.fund_name}${f.hidden_gem_flag ? ' <span class="tag gem">HIDDEN GEM</span>' : ''}</div>
+        <div class="fund-cat">${f.category_name} · <span class="tag ${riskClass(f.risk_grade)}">${f.risk_grade}</span></div>
+      </td>
+      <td class="mono">₹${fmtCr(f.current_aum_cr)} Cr</td>
+      <td class="mono ${f.cagr >= 0 ? 'cagr-pos' : 'cagr-neg'}">${(f.cagr*100).toFixed(1)}%</td>
+      <td class="mono">${f.avg_holding_period_months.toFixed(0)} mo</td>
+      <td>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div class="score-bar-track"><div class="score-bar-fill" style="width:${f.hidden_gem_score}%"></div></div>
+          <span class="mono">${f.hidden_gem_score.toFixed(0)}</span>
+        </div>
+      </td>
+      <td><button class="row-cta" data-sip="${f.fund_id}">SIP calculator →</button></td>
+    </tr>
+  `;
+  }).join('');
+
+  document.querySelectorAll('.fund-table thead th[data-key]').forEach(th => {
+    th.classList.toggle('sorted', th.dataset.key === sortKey);
+    th.querySelector('.sort-arrow').textContent = th.dataset.key === sortKey ? (sortDir === 1 ? '↑' : '↓') : '↕';
+  });
+
+  document.querySelectorAll('#fund-tbody tr').forEach(tr => {
+    tr.addEventListener('click', (e) => {
+      if (e.target.closest('button')) return;
+      openDetail(tr.dataset.id);
+    });
+  });
+  document.querySelectorAll('[data-sip]').forEach(btn => {
+    btn.addEventListener('click', () => openDetail(btn.dataset.sip, true));
+  });
+}
+['search-input'].forEach(id => document.getElementById(id).addEventListener('input', renderTable));
+['category-filter','gem-filter'].forEach(id => document.getElementById(id).addEventListener('change', renderTable));
+document.querySelectorAll('.fund-table thead th[data-key]').forEach(th => {
+  th.addEventListener('click', () => {
+    if (sortKey === th.dataset.key) sortDir *= -1; else { sortKey = th.dataset.key; sortDir = -1; }
+    renderTable();
+  });
+});
+renderTable();
+
+/* ---------- Nav links ---------- */
+const navLinks = { explore: document.getElementById('nav-explore'), gems: document.getElementById('nav-gems'), how: document.getElementById('nav-how') };
+function setActiveNav(key){
+  Object.values(navLinks).forEach(a => a.classList.remove('active'));
+  navLinks[key].classList.add('active');
+}
+function bindNav(el, fn){
+  el.addEventListener('click', fn);
+  el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fn(); } });
+}
+bindNav(navLinks.explore, () => {
+  document.getElementById('radar-section').scrollIntoView({behavior:'smooth'});
+  setActiveNav('explore');
+});
+bindNav(navLinks.gems, () => {
+  document.getElementById('gem-filter').value = 'gems';
+  renderTable();
+  document.getElementById('explorer-section').scrollIntoView({behavior:'smooth'});
+  setActiveNav('gems');
+});
+bindNav(navLinks.how, () => {
+  openHowItWorks();
+  setActiveNav('how');
+});
+
+function openHowItWorks(){
+  const topGem = [...FUNDS].filter(f=>f.hidden_gem_flag).sort((a,b)=>b.hidden_gem_score-a.hidden_gem_score)[0];
+  const catAvgForGem = topGem ? (CATEGORY_AVG[topGem.category_name]*100).toFixed(1) : null;
+  document.getElementById('panel-content').innerHTML = `
+    <div class="panel-head">
+      <div><h3>How the Hidden Gem Score works</h3></div>
+      <button class="panel-close" onclick="closePanel()" aria-label="Close panel">✕</button>
+    </div>
+    <div class="explain-box" style="margin-top:16px;">
+      Most fund apps rank by trailing returns, which mostly surfaces funds
+      the whole market has already found. HiddenGem instead blends four
+      signals into a single 0–100 score, weighted toward the two that are
+      hardest to fake.
+    </div>
+    <div class="sip-box" style="margin-top:16px;">
+      <div class="how-row"><div class="how-name">Holding strength <span>32%</span></div><div class="how-desc">How long existing investors stay invested, ranked against category peers. Long holding = conviction, not hype-driven flows.</div></div>
+      <div class="how-row"><div class="how-name">AUM growth <span>28%</span></div><div class="how-desc">How fast money is quietly flowing in, versus the fund's own category average — not versus the whole market.</div></div>
+      <div class="how-row"><div class="how-name">Risk-adj. performance <span>25%</span></div><div class="how-desc">CAGR adjusted for volatility (Sharpe-style), so a lucky spike doesn't outrank steady compounding.</div></div>
+      <div class="how-row" style="margin-bottom:0;"><div class="how-name">News momentum <span>15%</span></div><div class="how-desc">Whether analyst/media coverage is accelerating from a low base. Weighted lowest since news buzz alone is noisy and easy to game.</div></div>
+    </div>
+    <div class="explain-box" style="margin-top:16px;">
+      A fund is only flagged a <b>Hidden Gem</b> if its blended score is
+      70+ <i>and</i> its AUM is still below ₹20,000 Cr — the threshold
+      past which we consider a fund "already discovered" by the market.
+    </div>
+    ${topGem ? `
+    <div class="chart-box">
+      <h4>Worked example, from today's data</h4>
+      <div class="worked-example">
+        <div class="we-head">
+          <div class="we-name">${topGem.fund_name}</div>
+          <div class="we-score">${topGem.hidden_gem_score.toFixed(0)}<span>/100</span></div>
+        </div>
+        <div class="we-row"><span>Investors hold this fund</span><b>${topGem.avg_holding_period_months.toFixed(0)} months</b> <small>(${topGem.holding_period_percentile.toFixed(0)}th percentile in ${topGem.category_name})</small></div>
+        <div class="we-row"><span>AUM grew</span><b>${(topGem.aum_growth_rate*100).toFixed(0)}% YoY</b> <small>vs. ${catAvgForGem}% category avg CAGR as a reference point</small></div>
+        <div class="we-row"><span>Current AUM</span><b>₹${fmtCr(topGem.current_aum_cr)} Cr</b> <small>(below the ₹20,000 Cr "already discovered" line)</small></div>
+        <div class="we-row" style="border-bottom:none;"><span>Result</span><b style="color:#8A5A20;">${topGem.predicted_tier}</b></div>
+      </div>
+    </div>` : ''}
+  `;
+  overlay.classList.add('open');
+  panel.classList.add('open');
+}
+
+/* ---------- Overlay / panel shell ---------- */
+const overlay = document.getElementById('overlay');
+const panel = document.getElementById('panel');
+function closePanel(){ overlay.classList.remove('open'); panel.classList.remove('open'); }
+overlay.addEventListener('click', closePanel);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePanel(); });
+
+/* ---------- Fund picker ("Start SIP" flow) ---------- */
+document.getElementById('start-sip-btn').addEventListener('click', openPicker);
+
+function openPicker(){
+  const sorted = [...FUNDS].sort((a,b)=>b.hidden_gem_score-a.hidden_gem_score);
+  document.getElementById('panel-content').innerHTML = `
+    <div class="panel-head">
+      <div>
+        <h3>Start a SIP</h3>
+        <div class="fund-cat">Pick a fund to see the SIP calculator</div>
+      </div>
+      <button class="panel-close" onclick="closePanel()" aria-label="Close panel">✕</button>
+    </div>
+    <input type="text" class="picker-search" id="picker-search" placeholder="Search by fund or AMC name...">
+    <div class="picker-list" id="picker-list"></div>
+  `;
+  function renderList(q){
+    const list = sorted.filter(f => f.fund_name.toLowerCase().includes(q) || (f.amc_name||'').toLowerCase().includes(q));
+    document.getElementById('picker-list').innerHTML = list.map(f => `
+      <div class="picker-card" data-id="${f.fund_id}">
+        <div>
+          <div class="pn">${f.fund_name}${f.hidden_gem_flag ? ' <span class="tag gem">GEM</span>' : ''}</div>
+          <div class="pc">${f.category_name} · ${f.amc_name || ''}</div>
+        </div>
+        <div class="ps">${f.hidden_gem_score.toFixed(0)}<small>score</small></div>
+      </div>
+    `).join('');
+    document.querySelectorAll('.picker-card').forEach(c => c.addEventListener('click', () => openDetail(c.dataset.id, true)));
+  }
+  renderList('');
+  document.getElementById('picker-search').addEventListener('input', e => renderList(e.target.value.toLowerCase()));
+  overlay.classList.add('open');
+  panel.classList.add('open');
+}
+
+/* ---------- NAV chart ---------- */
+function drawNavChart(fundId){
+  const points = NAV_TRENDS[fundId];
+  if (!points || !points.length) return '';
+  const W = 420, H = 130, PAD = 8;
+  const navs = points.map(p => p[1]);
+  const min = Math.min(...navs), max = Math.max(...navs);
+  const path = points.map((p,i) => {
+    const x = PAD + (i/(points.length-1)) * (W - PAD*2);
+    const y = H - PAD - ((p[1]-min)/(max-min || 1)) * (H - PAD*2);
+    return `${i===0?'M':'L'}${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(' ');
+  const areaPath = path + ` L${W-PAD},${H-PAD} L${PAD},${H-PAD} Z`;
+  const growthPct = ((navs[navs.length-1]/navs[0]-1)*100).toFixed(0);
+  return `
+    <svg id="nav-chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="navGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#E8B94A" stop-opacity="0.35"/>
+          <stop offset="100%" stop-color="#E8B94A" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <path d="${areaPath}" fill="url(#navGrad)"/>
+      <path d="${path}" fill="none" stroke="#E8B94A" stroke-width="2"/>
+    </svg>
+    <div style="font-size:12px;color:var(--ink-soft);margin-top:6px;">NAV growth over tracked period: <b style="color:var(--green-500)">+${growthPct}%</b></div>
+  `;
+}
+
+/* ---------- Fund vs category comparison chart ---------- */
+function drawCompareChart(f){
+  const catAvg = CATEGORY_AVG[f.category_name] || 0;
+  const W = 420, H = 80;
+  const maxVal = Math.max(f.cagr, catAvg, 0.01) * 1.25;
+  const barY1 = 14, barY2 = 48, barH = 20;
+  const scale = v => Math.max(2, (v / maxVal) * (W - 130));
+  return `
+    <svg id="compare-chart" viewBox="0 0 ${W} ${H}">
+      <text x="0" y="${barY1+14}" font-size="11.5" fill="var(--ink-soft)" font-family="IBM Plex Sans">This fund</text>
+      <rect x="82" y="${barY1}" width="${scale(f.cagr)}" height="${barH}" rx="5" fill="var(--yellow)"/>
+      <text x="${90+scale(f.cagr)}" y="${barY1+14}" font-size="12" font-weight="600" fill="var(--green-900)" font-family="IBM Plex Mono">${(f.cagr*100).toFixed(1)}%</text>
+      <text x="0" y="${barY2+14}" font-size="11.5" fill="var(--ink-soft)" font-family="IBM Plex Sans">Category avg</text>
+      <rect x="82" y="${barY2}" width="${scale(catAvg)}" height="${barH}" rx="5" fill="var(--green-300)"/>
+      <text x="${90+scale(catAvg)}" y="${barY2+14}" font-size="12" font-weight="600" fill="var(--green-900)" font-family="IBM Plex Mono">${(catAvg*100).toFixed(1)}%</text>
+    </svg>
+  `;
+}
+
+/* ---------- SIP calculator (Groww-style) ---------- */
+function calcSIP(monthly, years, annualRatePct){
+  const r = annualRatePct/100/12;
+  const n = years*12;
+  const yearly = [];
+  let invested = 0, value = 0;
+  for (let m = 1; m <= n; m++){
+    value = (value + monthly) * (1+r);
+    invested += monthly;
+    if (m % 12 === 0) yearly.push({ year: m/12, invested, value });
+  }
+  return { invested, value, returns: value - invested, yearly };
+}
+
+function drawSipChart(yearly){
+  const W = 420, H = 170, PAD_L = 6, PAD_B = 22, PAD_T = 10;
+  const maxVal = Math.max(...yearly.map(y=>y.value));
+  const bw = (W - PAD_L*2) / yearly.length;
+  let bars = '';
+  yearly.forEach((y,i) => {
+    const x = PAD_L + i*bw + bw*0.18;
+    const barW = bw*0.64;
+    const investedH = (y.invested/maxVal) * (H - PAD_T - PAD_B);
+    const totalH = (y.value/maxVal) * (H - PAD_T - PAD_B);
+    const baseY = H - PAD_B;
+    bars += `<rect x="${x.toFixed(1)}" y="${(baseY-totalH).toFixed(1)}" width="${barW.toFixed(1)}" height="${(totalH-investedH).toFixed(1)}" fill="var(--yellow)" rx="2"/>`;
+    bars += `<rect x="${x.toFixed(1)}" y="${(baseY-investedH).toFixed(1)}" width="${barW.toFixed(1)}" height="${investedH.toFixed(1)}" fill="var(--green-500)" rx="2"/>`;
+    if (yearly.length <= 15 || i % 2 === 0 || i === yearly.length-1){
+      bars += `<text x="${(x+barW/2).toFixed(1)}" y="${H-6}" font-size="9.5" fill="var(--ink-soft)" text-anchor="middle" font-family="IBM Plex Sans">Y${y.year}</text>`;
+    }
+  });
+  return `<svg id="sip-chart" viewBox="0 0 ${W} ${H}">${bars}</svg>`;
+}
+
+function wireSipCalculator(f){
+  const monthlyEl = document.getElementById('sip-monthly');
+  const yearsEl = document.getElementById('sip-years');
+  const rateEl = document.getElementById('sip-rate');
+
+  function update(){
+    const monthly = +monthlyEl.value;
+    const years = +yearsEl.value;
+    const rate = +rateEl.value;
+    document.getElementById('sip-monthly-val').textContent = fmtINR(monthly);
+    document.getElementById('sip-years-val').textContent = years + ' yr' + (years>1?'s':'');
+    document.getElementById('sip-rate-val').textContent = rate.toFixed(1) + '%';
+
+    const res = calcSIP(monthly, years, rate);
+    document.getElementById('sip-invested').textContent = fmtINR(res.invested);
+    document.getElementById('sip-returns').textContent = fmtINR(res.returns);
+    document.getElementById('sip-total').textContent = fmtINR(res.value);
+    document.getElementById('sip-chart-holder').innerHTML = drawSipChart(res.yearly);
+  }
+  [monthlyEl, yearsEl, rateEl].forEach(el => el.addEventListener('input', update));
+  update();
+}
+
+/* ---------- Detail panel ---------- */
+/* ---------- Why-is-this-a-hidden-gem breakdown ---------- */
+function buildWhyBreakdown(f){
+  const items = [
+    {
+      label: 'Holding strength', value: f.holding_strength_score, met: f.holding_strength_score > 65,
+      text: `Investors hold this fund ${f.avg_holding_period_months.toFixed(0)} months on average — the ${f.holding_period_percentile.toFixed(0)}th percentile within ${f.category_name}.`
+    },
+    {
+      label: 'AUM growth', value: f.aum_growth_score, met: f.aum_growth_score > 65,
+      text: `AUM has grown ${(f.aum_growth_rate*100).toFixed(0)}% year-over-year, ${f.aum_growth_score>65?'outpacing':'roughly in line with'} most ${f.category_name} peers.`
+    },
+    {
+      label: 'Risk-adjusted performance', value: f.performance_score, met: f.performance_score > 65,
+      text: `Delivering a ${(f.cagr*100).toFixed(1)}% CAGR at ${(f.volatility*100).toFixed(1)}% volatility — ${f.performance_score>65 ? 'strong for the risk taken' : 'moderate for the risk taken'}.`
+    },
+    {
+      label: 'News momentum', value: f.news_momentum_score, met: f.news_momentum_score > 65,
+      text: f.news_momentum_score>65 ? 'Analyst and media mentions are accelerating from a low base — still early.' : 'No major acceleration in news coverage yet.'
+    },
+  ];
+  const verdict = f.hidden_gem_flag
+    ? `This fund crosses our 70+ score threshold, and at ₹${fmtCr(f.current_aum_cr)} Cr AUM it's still below the ₹20,000 Cr "already discovered" line — so it's flagged as a <b>Hidden Gem</b>.`
+    : (f.hidden_gem_score >= 70
+        ? `This fund scores ${f.hidden_gem_score.toFixed(0)}, but at ₹${fmtCr(f.current_aum_cr)} Cr AUM it has already crossed our "already discovered" threshold — the market has found it.`
+        : `This fund scores ${f.hidden_gem_score.toFixed(0)}, below our 70-point Hidden Gem threshold — solid on some fronts, but no standout early signal yet.`);
+
+  return `
+    <div class="why-verdict">${verdict}</div>
+    <div class="why-list">
+      ${items.map(it => `
+        <div class="why-item ${it.met ? 'met':''}">
+          <div class="why-icon">${it.met ? '✓' : '–'}</div>
+          <div class="why-body">
+            <div class="why-label">${it.label} <span>${it.value.toFixed(0)}/100</span></div>
+            <div class="why-text">${it.text}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function openDetail(fundId, scrollToSip){
+  const f = FUNDS.find(x => x.fund_id == fundId);
+  if (!f) return;
+
+  const subscores = [
+    ['Holding strength', f.holding_strength_score],
+    ['AUM growth', f.aum_growth_score],
+    ['Risk-adj. performance', f.performance_score],
+    ['News momentum', f.news_momentum_score],
+  ];
+  const impliedCagr = Math.round(Math.min(26, Math.max(8, f.hidden_gem_score/100 * 18 + 8)) * 2) / 2;
+
+  document.getElementById('panel-content').innerHTML = `
+    <div class="panel-head">
+      <div>
+        <h3>${f.fund_name}</h3>
+        <div class="fund-cat">${f.amc_name ? f.amc_name + ' · ' : ''}${f.category_name} · <span class="tag ${riskClass(f.risk_grade)}">${f.risk_grade} risk</span></div>
+      </div>
+      <button class="panel-close" onclick="closePanel()" aria-label="Close panel">✕</button>
+    </div>
+
+    <div class="panel-score">
+      <div class="big">${f.hidden_gem_score.toFixed(0)}<span> / 100 Hidden Gem Score</span></div>
+      <div class="tier">${f.hidden_gem_flag ? '🟡 ' : ''}${f.predicted_tier}</div>
+      <div class="subscore">
+        ${subscores.map(([name,val]) => `
+          <div class="subscore-row">
+            <div class="name">${name}</div>
+            <div class="subscore-track"><div class="subscore-fill" style="width:${val}%"></div></div>
+            <div class="mono">${val.toFixed(0)}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <div class="chart-box">
+      <h4>Why is this ${f.hidden_gem_flag ? 'a Hidden Gem' : 'not (yet) a Hidden Gem'}?</h4>
+      ${buildWhyBreakdown(f)}
+    </div>
+
+    <div class="chart-box">
+      <h4>NAV history</h4>
+      ${drawNavChart(f.fund_id)}
+    </div>
+
+    <div class="chart-box compare-box">
+      <h4>This fund vs. category average CAGR</h4>
+      ${drawCompareChart(f)}
+    </div>
+
+    <div class="sip-box" id="sip-section">
+      <h4>SIP Calculator</h4>
+      <div class="sub">Estimate what a monthly SIP in this fund could grow to, using the model-implied return of ${impliedCagr.toFixed(1)}% p.a.</div>
+
+      <div class="sip-field">
+        <div class="sip-field-head"><span>Monthly investment</span><b id="sip-monthly-val"></b></div>
+        <input type="range" id="sip-monthly" min="500" max="100000" step="500" value="5000">
+      </div>
+      <div class="sip-field">
+        <div class="sip-field-head"><span>Investment period</span><b id="sip-years-val"></b></div>
+        <input type="range" id="sip-years" min="1" max="30" step="1" value="10">
+      </div>
+      <div class="sip-field">
+        <div class="sip-field-head"><span>Expected annual return</span><b id="sip-rate-val"></b></div>
+        <input type="range" id="sip-rate" min="6" max="28" step="0.5" value="${impliedCagr.toFixed(1)}">
+      </div>
+
+      <div class="sip-results">
+        <div class="sip-result"><div class="l">Invested</div><div class="v" id="sip-invested"></div></div>
+        <div class="sip-result hi"><div class="l">Est. returns</div><div class="v" id="sip-returns"></div></div>
+        <div class="sip-result"><div class="l">Total value</div><div class="v" id="sip-total"></div></div>
+      </div>
+
+      <div id="sip-chart-holder"></div>
+      <div class="sip-legend">
+        <div class="item"><span class="sw" style="background:var(--green-500);"></span>Amount invested</div>
+        <div class="item"><span class="sw" style="background:var(--yellow);"></span>Wealth gained</div>
+      </div>
+    </div>
+  `;
+
+  wireSipCalculator(f);
+  overlay.classList.add('open');
+  panel.classList.add('open');
+  if (scrollToSip){
+    requestAnimationFrame(() => {
+      document.getElementById('sip-section').scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  }
+}
+</script>
+</body>
+</html>
